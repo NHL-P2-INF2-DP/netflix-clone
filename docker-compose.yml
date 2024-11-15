@@ -1,0 +1,22 @@
+services:
+  nextjs:
+    build: .
+    ports:
+      - '3000:3000'
+    environment:
+      - NODE_ENV=production
+    restart: always
+  postgres:
+    image: postgres:16
+    restart: always
+    environment:
+      - POSTGRES_USER=netflix
+      - POSTGRES_PASSWORD=09oW2kx4p8debEXwou31piLi0ACS4VL37HjzcsPFX3O6ToVRs4F90zRrvhrMMnXVVnZfxA
+      - POSTGRES_DB=netflix
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  volumes:
+    postgres-data:
