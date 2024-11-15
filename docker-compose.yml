@@ -10,9 +10,9 @@ services:
     image: postgres:16
     restart: always
     environment:
-      - POSTGRES_USER=netflix
-      - POSTGRES_PASSWORD=09oW2kx4p8debEXwou31piLi0ACS4VL37HjzcsPFX3O6ToVRs4F90zRrvhrMMnXVVnZfxA
-      - POSTGRES_DB=netflix
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
     ports:
       - '5432:5432'
     volumes:
