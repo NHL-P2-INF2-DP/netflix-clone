@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
 
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Geist } from 'next/font/google';
 
 import '@/styles/globals.css';
+import Providers from '@/components/providers';
 
 const geist = Geist({
   subsets: ['latin'],
@@ -19,16 +19,10 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const queryClient = new QueryClient();
-
   return (
     <html lang="en">
-      <body
-        className={`antialiased ${geist.className}`}
-      >
-        <QueryClientProvider client={queryClient}>
-          {children}
-        </QueryClientProvider>
+      <body className={`antialiased ${geist.className}`}>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
