@@ -30,6 +30,6 @@ To learn more about Next.js, take a look at the following resources:
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
 ## Extra Libraries used
-- [@tanstack/react-query](https://tanstack.com/query/v5/docs/react/overview) - Fetching data 
-- [zod] (https://github.com/colinhacks/zod) - Validation
 
+- [@tanstack/react-query](https://tanstack.com/query/v5/docs/react/overview) - Fetching data
+- [zod] (https://github.com/colinhacks/zod) - Validation
