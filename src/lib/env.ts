@@ -14,6 +14,7 @@ expand(
 
 const EnvSchema = z
   .object({
+    // add new environment variables here, this will allow you to access them in your app in a type-safe manner
     NODE_ENV: z.string().default("development"),
     PORT: z.coerce.number().default(3000),
   })
