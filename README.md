@@ -31,3 +31,5 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 
 ## Extra Libraries used
 - [@tanstack/react-query](https://tanstack.com/query/v5/docs/react/overview) - Fetching data 
+- [zod] (https://github.com/colinhacks/zod) - Validation
+
