@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "prepare": "husky"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.60.5",
@@ -16,6 +17,7 @@
     "clsx": "^2.1.1",
     "dotenv": "^16.4.5",
     "dotenv-expand": "^11.0.7",
+    "husky": "^9.1.6",
     "lucide-react": "^0.456.0",
     "next": "15.0.3",
     "prettier": "^3.3.3",

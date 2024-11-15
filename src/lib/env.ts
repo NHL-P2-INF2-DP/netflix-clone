@@ -1,3 +1,4 @@
+/* eslint-disable node/no-process-env */
 import { config } from 'dotenv';
 import { expand } from 'dotenv-expand';
 import path from 'node:path';
