@@ -33,4 +33,7 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 
 - [@tanstack/react-query](https://tanstack.com/query/v5) - Fetching data
 - [zod](https://zod.dev/) - Validation
--
+
+## Quirks
+
+- To add new env variables, add them to the `.env.example` file and head over to `@/lib/env.ts` to add them to the `EnvSchema`. this will allow you to access them in your app in a type-safe manner.
