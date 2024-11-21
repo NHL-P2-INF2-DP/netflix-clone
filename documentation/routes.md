@@ -143,7 +143,3 @@
 - **GET** `/previous-password-hashes/{account_id}` - Get password hashes for a specific account.
 - **POST** `/previous-password-hashes` - Add a new password hash.
 - **DELETE** `/previous-password-hashes/{id}` - Delete a password hash.
-
----
-
-This set of routes is designed for CRUD functionality while keeping the structure straightforward. Let me know if you need further refinement.

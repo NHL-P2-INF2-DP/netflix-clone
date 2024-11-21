@@ -119,20 +119,20 @@ classDiagram
     }
 
     %% Associations
-    Account "1" --> "many" Profile : has
-    Profile "1" --> "many" ViewingHistory : has
-    Profile "1" --> "many" Watchlist : has
-    Content "1" --> "many" ViewingHistory : is_watched
-    Content "1" --> "many" Watchlist : added_to
-    Content "1" --> "many" ContentMetadata : is_described_by
-    Genre "1" --> "many" ContentMetadata : belongs_to
-    Language "1" --> "many" ContentMetadata : supports
-    Subtitle "1" --> "1" Language : uses
-    ContentMetadata "1" --> "1" Content : describes
-    ContentMetadata "1" --> "1" ContentRating : rated_by
-    Content "1" --> "1" Quality : has
-    Subscription "1" --> "1" Account : belongs_to
-    Subscription "1" --> "1" SubscriptionType : uses
-    Subscription "1" --> "many" Invoice : has
-    PreviousPasswordHash "1" --> "1" Account : belongs_to
+    Account "1" --> "*..1" Profile
+    Profile "1" --> "*..1" ViewingHistory
+    Profile "1" --> "*..1" Watchlist
+    Content "1" --> "*..1" ViewingHistory
+    Content "1" --> "*..1" Watchlist
+    Content "1" --> "*..1" ContentMetadata
+    Genre "1" --> "*..1" ContentMetadata
+    Language "1" --> "*..1" ContentMetadata
+    Subtitle "1" --> "1" Language
+    ContentMetadata "1" --> "1" Content
+    ContentMetadata "1" --> "1" ContentRating
+    Content "1" --> "1" Quality
+    Subscription "1" --> "1" Account
+    Subscription "1" --> "1" SubscriptionType
+    Subscription "1" --> "*..1" Invoice
+    PreviousPasswordHash "1" --> "1" Account
 ```
