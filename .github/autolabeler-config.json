@@ -1,0 +1,70 @@
+{
+  "Classes": [
+    {
+      "fileStatus": "renamed",
+      "includeGlobs": ["src/app/classes/**"],
+      "excludeGlobs": []
+    },
+    {
+      "fileStatus": "removed",
+      "includeGlobs": ["src/app/classes/**"],
+      "excludeGlobs": []
+    },
+    {
+      "fileStatus": "added",
+      "includeGlobs": ["src/app/classes/**"],
+      "excludeGlobs": []
+    }
+  ],
+  "API": [
+    {
+      "fileStatus": "added",
+      "includeGlobs": ["src/app/api/**"],
+      "excludeGlobs": []
+    },
+    {
+      "fileStatus": "modified",
+      "includeGlobs": ["src/app/api/**"],
+      "excludeGlobs": []
+    },
+    {
+      "fileStatus": "removed",
+      "includeGlobs": ["src/app/api/**"],
+      "excludeGlobs": []
+    }
+  ],
+  "Frontend": [
+    {
+      "fileStatus": "modified",
+      "includeGlobs": ["src/app/**"],
+      "excludeGlobs": ["src/app/api/**"]
+    },
+    {
+      "fileStatus": "added",
+      "includeGlobs": ["src/app/**"],
+      "excludeGlobs": ["src/app/api/**"]
+    },
+    {
+      "fileStatus": "removed",
+      "includeGlobs": ["src/app/**"],
+      "excludeGlobs": ["src/app/api/**"]
+    }
+  ],
+  "Documentation": [
+    {
+      "fileStatus": "modified",
+      "includeGlobs": ["documentation/**"],
+      "excludeGlobs": []
+    },
+    {
+      "fileStatus": "removed",
+      "includeGlobs": ["documentation/**"],
+      "excludeGlobs": []
+    },
+    {
+      "fileStatus": "added",
+      "includeGlobs": ["documentation/**"],
+      "excludeGlobs": []
+    }
+  ]
+}
