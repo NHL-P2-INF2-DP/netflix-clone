@@ -1,3 +1,9 @@
+# API Routes
+
+This is a list of all the routes that are available in the API. You can use these routes to interact with the data stored in the database.
+
+---
+
 ### **Account Management**
 
 - **GET** `/accounts` - Get all accounts.
