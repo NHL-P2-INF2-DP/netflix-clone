@@ -38,5 +38,6 @@ export default antfu(
         },
       ],
     },
+    ignores: ['.husky/commit-msg'],
   },
 );
