@@ -21,8 +21,12 @@ const envSchema = z.object({
   DATABASE_URL: z.string(),
 });
 
-declare module 'node' {
-  interface ProcessEnv extends z.infer<typeof envSchema> {}
+const { error, data: parsedEnv } = envSchema.safeParse(process.env);
+
+if (error) {
+  console.error('❌ Invalid env:');
+  console.error(JSON.stringify(error.flatten().fieldErrors, null, 2));
+  process.exit(1);
 }
 
-export const env = envSchema.parse(process.env);
+export const env = parsedEnv!;
