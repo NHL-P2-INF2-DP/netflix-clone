@@ -1,5 +1,3 @@
-import type { PoolClient } from 'pg';
-
 import { Pool } from 'pg';
 
 import { env } from '../env';
@@ -36,27 +34,6 @@ export class DatabaseService {
   }
 
   /**
-   * Executes a query using a client from the pool
-   * @param {string} query - The SQL query to execute
-   * @param {any[]} params - The query parameters
-   * @returns {Promise<any>} The query results
-   */
-  public async query<T>(query: string, params?: any[]): Promise<T> {
-    const client = await this.pool.connect();
-    try {
-      const result = await client.query(query, params);
-      return result.rows as T;
-    }
-    catch (error) {
-      console.error('Database query error:', error);
-      throw error;
-    }
-    finally {
-      client.release();
-    }
-  }
-
-  /**
    * Executes a stored procedure
    * @param {string} procedureName - The name of the stored procedure
    * @param {any[]} params - The procedure parameters
@@ -80,14 +57,6 @@ export class DatabaseService {
     finally {
       client.release();
     }
-  }
-
-  /**
-   * Gets a client for transaction operations
-   * @returns {Promise<PoolClient>} A database client
-   */
-  public async getClient(): Promise<PoolClient> {
-    return await this.pool.connect();
   }
 
   /**
