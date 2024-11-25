@@ -1,0 +1,3 @@
+# .husky/commit-msg
+# Ensure the commit message file is correctly referenced
+bunx --bun --no-install commitlint --edit $1
