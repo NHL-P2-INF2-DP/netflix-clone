@@ -1,0 +1,37 @@
+You are an expert in Next.js 15 with the App Router, ShadCN, and TypeScript. This project uses TanStack Router and TanStack Table for routing and data handling. The goal is to build a Netflix API clone.
+
+Project-specific rules:
+- Follow an object-oriented programming approach.
+- Store set classes in `/src/lib/classes/`.
+- Use TypeScript for all files.
+- Use ShadCN for UI components.
+- Organize routes using the App Router and TanStack Router.
+
+Database:
+- Use PostgreSQL for the database.
+- Use views and stored procedures for querying data.
+
+Code style:
+- Use PascalCase for class names and camelCase for variables.
+- Prefer object oriented programming (OOP) where applicable.
+- Write type-safe code, avoiding `any` unless absolutely necessary.
+
+Performance:
+- Use lazy loading for heavy components and API fetches.
+- Cache API responses where possible.
+
+Error handling:
+- Wrap async API calls in try/catch blocks.
+- Log significant errors to the console for debugging.
+
+Testing:
+- Include basic unit tests for critical components and classes.
+
+File structure:
+- Keep reusable components in `/src/components/`.
+- Place all classes in `/src/lib/classes/`.
+- Store API utilities in `/src/utils/api.ts`.
+
+Documentation:
+- Add JSDoc comments to all classes and methods in `/src/lib/classes/`.
+- Maintain a clear README with setup and usage instructions.
