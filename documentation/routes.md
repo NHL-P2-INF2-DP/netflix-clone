@@ -149,3 +149,14 @@ This is a list of all the routes that are available in the API. You can use thes
 - **GET** `/previous-password-hashes/{account_id}` - Get password hashes for a specific account.
 - **POST** `/previous-password-hashes` - Add a new password hash.
 - **DELETE** `/previous-password-hashes/{id}` - Delete a password hash.
+
+---
+
+### **Authentication**
+
+- **POST** `/login` - Authenticate a user and return a token.
+- **POST** `/register` - Register a new user.
+- **GET** `/users` - Get all users.
+- **GET** `/users/{id}` - Get a specific user by ID.
+- **PUT** `/users/{id}` - Update user details.
+- **DELETE** `/users/{id}` - Delete a user.
