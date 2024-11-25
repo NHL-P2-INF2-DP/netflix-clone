@@ -1,1 +1,2 @@
+# .husky/commit-msg
 echo "bunx --no -- commitlint --edit \$1" > .husky/commit-msg
