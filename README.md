@@ -49,3 +49,34 @@ you wont be able to commit without a type, so make sure to add one.
 ## 🚨 Quirks
 
 - To add new env variables, add them to the `.env.example` file and head over to `@/lib/env.ts` to add them to the `EnvSchema`. this will allow you to access them in your app in a type-safe manner.
+
+## Documentation
+
+The ERD for this project can be found in the [documentation/erd.md](https://github.com/NHL-P2-INF2-DP/netflix-clone/tree/main/documentation/erd.md) file.
+
+The routes for this project can be found in the [documentation/routes.md](https://github.com/NHL-P2-INF2-DP/netflix-clone/tree/main/documentation/routes.md) file.
+
+## Deployment
+
+To deploy this project using Docker Compose, follow these steps:
+
+1. Clone the repository:
+
+```bash
+git clone https://github.com/NHL-P2-INF2-DP/netflix-clone.git
+cd netflix-clone
+```
+
+2. Copy the .env.example file to .env and update the environment variables as needed:
+
+```bash
+cp .env.example .env
+```
+
+3. Start the Docker containers:
+
+```bash
+docker-compose up
+```
+
+The application and the PostgreSQL database will now be running. The application will be accessible at [http://localhost:3000](http://localhost:3000).
