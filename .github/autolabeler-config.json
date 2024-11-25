@@ -2,17 +2,17 @@
   "Classes": [
     {
       "fileStatus": "renamed",
-      "includeGlobs": ["src/app/classes/**"],
+      "includeGlobs": ["src/lib/classes/**"],
       "excludeGlobs": []
     },
     {
       "fileStatus": "removed",
-      "includeGlobs": ["src/app/classes/**"],
+      "includeGlobs": ["src/lib/classes/**"],
       "excludeGlobs": []
     },
     {
       "fileStatus": "added",
-      "includeGlobs": ["src/app/classes/**"],
+      "includeGlobs": ["src/lib/classes/**"],
       "excludeGlobs": []
     }
   ],
