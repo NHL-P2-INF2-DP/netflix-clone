@@ -38,6 +38,12 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 
 - To add new env variables, add them to the `.env.example` file and head over to `@/lib/env.ts` to add them to the `EnvSchema`. this will allow you to access them in your app in a type-safe manner.
 
+## Documentation
+
+The ERD for this project can be found in the [documentation/erd.md](https://github.com/NHL-P2-INF2-DP/netflix-clone/tree/main/documentation/erd.md) file.
+
+The routes for this project can be found in the [documentation/routes.md](https://github.com/NHL-P2-INF2-DP/netflix-clone/tree/main/documentation/routes.md) file.
+
 ## Deployment
 
 To deploy this project using Docker Compose, follow these steps:
