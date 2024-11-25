@@ -5,7 +5,7 @@ Project-specific rules:
 - Store set classes in `/src/lib/classes/`.
 - Use TypeScript for all files.
 - Use ShadCN for UI components.
-- Organize routes using the App Router and TanStack Router.
+- Organize routes using the App Router.
 
 Database:
 - Use PostgreSQL for the database.
