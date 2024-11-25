@@ -37,3 +37,28 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 ## Quirks
 
 - To add new env variables, add them to the `.env.example` file and head over to `@/lib/env.ts` to add them to the `EnvSchema`. this will allow you to access them in your app in a type-safe manner.
+
+## Deployment
+
+To deploy this project using Docker Compose, follow these steps:
+
+1. Clone the repository:
+
+```bash
+git clone https://github.com/your-username/netflix-clone.git
+cd netflix-clone
+```
+
+2. Copy the .env.example file to .env and update the environment variables as needed:
+
+```bash
+cp .env.example .env
+```
+
+3. Start the Docker containers:
+
+```bash
+docker-compose up
+```
+
+The application and the PostgreSQL database will now be running. The application will be accessible at [http://localhost:3000](http://localhost:3000).
