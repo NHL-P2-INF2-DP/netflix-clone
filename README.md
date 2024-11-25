@@ -51,7 +51,7 @@ To deploy this project using Docker Compose, follow these steps:
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/your-username/netflix-clone.git
+git clone https://github.com/NHL-P2-INF2-DP/netflix-clone.git
 cd netflix-clone
 ```
 
