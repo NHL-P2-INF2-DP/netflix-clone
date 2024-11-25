@@ -13,16 +13,15 @@ expand(
   }),
 );
 
-const EnvSchema = z.object({
+const envSchema = z.object({
   // add new environment variables here, this will allow you to access them in your app in a type-safe manner
   NODE_ENV: z.string().default('development'),
   PORT: z.coerce.number().default(3000),
+  JWT_SECRET: z.string().min(32),
+  DATABASE_URL: z.string(),
 });
 
-export type env = z.infer<typeof EnvSchema>;
-
-// eslint-disable-next-line ts/no-redeclare
-const { data: env, error } = EnvSchema.safeParse(process.env);
+const { error, data: parsedEnv } = envSchema.safeParse(process.env);
 
 if (error) {
   console.error('❌ Invalid env:');
@@ -30,4 +29,4 @@ if (error) {
   process.exit(1);
 }
 
-export default env!;
+export const env = parsedEnv!;
