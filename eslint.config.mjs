@@ -14,6 +14,7 @@ export default antfu(
     plugins: {
       '@tanstack/query': pluginQuery,
     },
+    extends: ['next/core-web-vitals', 'next/typescript'],
   },
   {
     rules: {
@@ -22,6 +23,7 @@ export default antfu(
       'antfu/no-top-level-await': ['off'],
       'node/prefer-global/process': ['off'],
       'node/no-process-env': ['error'],
+      'unused-imports/no-unused-vars': ['off'],
       'perfectionist/sort-imports': [
         'error',
         {
