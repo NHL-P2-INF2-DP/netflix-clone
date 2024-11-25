@@ -13,6 +13,7 @@ Database:
 
 Code style:
 - Use PascalCase for class names and camelCase for variables.
+- use kebabCase for file names.
 - Prefer object oriented programming (OOP) where applicable.
 - Write type-safe code, avoiding `any` unless absolutely necessary.
 
