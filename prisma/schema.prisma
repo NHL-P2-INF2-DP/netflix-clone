@@ -1,0 +1,215 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["views"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ContentType {
+  MOVIE
+  SERIES
+  DOCUMENTARY
+}
+
+enum AgeRating {
+  G
+  PG
+  PG_13
+  R
+  NC_17
+}
+
+model User {
+  id        BigInt  @id @default(autoincrement())
+  email     String  @unique
+  password  String
+  activated Boolean @default(true)
+  tokens    Token[]
+}
+
+model Token {
+  id        BigInt   @id @default(autoincrement())
+  userId    BigInt   @map("user_id")
+  token     String   @map("token")
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum PaymentStatus {
+  PAID
+  UNPAID
+  PENDING
+}
+
+model Genre {
+  id              BigInt            @id @default(autoincrement())
+  name            String            @unique
+  ContentMetadata ContentMetadata[]
+}
+
+model ContentRating {
+  id              BigInt            @id @default(autoincrement())
+  ratingType      String            @unique @map("rating_type")
+  ContentMetadata ContentMetadata[]
+}
+
+model Content {
+  id              BigInt            @id @default(autoincrement())
+  title           String
+  duration        DateTime
+  releaseDate     DateTime          @map("release_date")
+  season          Int?
+  qualityId       BigInt?           @map("quality_id")
+  createdAt       DateTime          @default(now()) @map("created_at")
+  updatedAt       DateTime          @updatedAt @map("updated_at")
+  ContentMetadata ContentMetadata[]
+  ViewingHistory  ViewingHistory[]
+  Watchlist       Watchlist[]
+}
+
+model Language {
+  id              BigInt            @id @default(autoincrement())
+  language        String            @unique
+  Subtitle        Subtitle[]
+  ContentMetadata ContentMetadata[]
+}
+
+model Subtitle {
+  id              BigInt            @id @default(autoincrement())
+  languageId      BigInt            @map("language_id")
+  content         String
+  language        Language          @relation(fields: [languageId], references: [id], onDelete: Cascade)
+  ContentMetadata ContentMetadata[]
+}
+
+model ContentMetadata {
+  id              BigInt      @id @default(autoincrement())
+  title           BigInt?
+  genreId         BigInt?     @map("genre_id")
+  rating          Int?        @db.Integer
+  contentId       BigInt      @map("content_id")
+  languageId      BigInt?     @map("language_id")
+  subtitleId      BigInt?     @map("subtitle_id")
+  contentType     ContentType @map("content_type")
+  contentRatingId BigInt?     @map("content_rating_id")
+  ageRating       AgeRating   @map("age_rating")
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
+
+  genre         Genre?         @relation(fields: [genreId], references: [id], onDelete: SetNull)
+  content       Content        @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  language      Language?      @relation(fields: [languageId], references: [id], onDelete: SetNull)
+  subtitle      Subtitle?      @relation(fields: [subtitleId], references: [id], onDelete: SetNull)
+  contentRating ContentRating? @relation(fields: [contentRatingId], references: [id], onDelete: SetNull)
+
+  @@index([contentId])
+  @@index([genreId])
+}
+
+model Account {
+  id                    BigInt                 @id @default(autoincrement())
+  email                 String                 @unique
+  password              String
+  activated             Boolean                @default(false)
+  blockedUntil          DateTime?              @map("blocked_until")
+  createdAt             DateTime               @default(now()) @map("created_at")
+  updatedAt             DateTime               @updatedAt @map("updated_at")
+  Profile               Profile[]
+  PreviousPasswordHash  PreviousPasswordHash[]
+  Subscription          Subscription[]
+  ReferredSubscriptions Subscription[]         @relation("Referral")
+}
+
+model PreviousPasswordHash {
+  id           BigInt   @id @default(autoincrement())
+  accountId    BigInt   @map("account_id")
+  passwordHash String   @map("password_hash")
+  createdAt    DateTime @default(now()) @map("created_at")
+  account      Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId])
+}
+
+model Profile {
+  id             BigInt           @id @default(autoincrement())
+  accountId      BigInt           @map("account_id")
+  name           String
+  profileImage   BigInt?          @map("profile_image")
+  dateOfBirth    DateTime         @map("date_of_birth")
+  language       String
+  createdAt      DateTime         @default(now()) @map("created_at")
+  updatedAt      DateTime         @updatedAt @map("updated_at")
+  account        Account          @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  ViewingHistory ViewingHistory[]
+  Watchlist      Watchlist[]
+
+  @@index([accountId])
+}
+
+model SubscriptionType {
+  id               BigInt         @id @default(autoincrement())
+  type             String         @unique
+  priceInEuroCents Int            @map("price_in_euro_cents")
+  Subscription     Subscription[]
+}
+
+model Subscription {
+  id                 BigInt   @id @default(autoincrement())
+  beginDate          DateTime @map("begin_date") @db.Date
+  endDate            DateTime @map("end_date") @db.Date
+  accountId          BigInt   @map("account_id")
+  subscriptionTypeId BigInt   @map("subscription_type_id")
+  referralId         BigInt?  @map("referral_id")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  account          Account          @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  subscriptionType SubscriptionType @relation(fields: [subscriptionTypeId], references: [id], onDelete: Restrict)
+  referredBy       Account?         @relation("Referral", fields: [referralId], references: [id], onDelete: SetNull)
+  Invoice          Invoice[]
+
+  @@index([accountId])
+}
+
+model Invoice {
+  id             BigInt        @id @default(autoincrement())
+  subscriptionId BigInt        @map("subscription_id")
+  isPaid         PaymentStatus @default(PENDING) @map("is_paid")
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+  subscription   Subscription  @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+}
+
+model ViewingHistory {
+  id                 BigInt   @id @default(autoincrement())
+  profileId          BigInt   @map("profile_id")
+  contentId          BigInt   @map("content_id")
+  watchDate          DateTime @default(now()) @map("watch_date")
+  progressPercentage Float    @map("progress_percentage")
+  profile            Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  content            Content  @relation(fields: [contentId], references: [id], onDelete: Cascade)
+
+  @@index([profileId])
+  @@index([contentId])
+}
+
+model Watchlist {
+  id        BigInt  @id @default(autoincrement())
+  profileId BigInt  @map("profile_id")
+  contentId BigInt  @map("content_id")
+  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  content   Content @relation(fields: [contentId], references: [id], onDelete: Cascade)
+
+  @@unique([profileId, contentId])
+  @@index([profileId])
+  @@index([contentId])
+}
