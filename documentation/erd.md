@@ -1,4 +1,3 @@
-```mermaid
 erDiagram
     genre {
         bigint id
@@ -100,18 +99,18 @@ erDiagram
         text password_hash
         date created_at
     }
-
-    content_metadata }o--|| content : "content_id"
-    content_metadata ||--o{ genre : "genre_id"
-    content_metadata ||--o{ language : "language_id"
-    content_metadata ||--o{ subtitle : "subtitle_id"
-    content_metadata ||--o{ content_rating : "content_rating_id"
-    viewinghistory ||--o{ content : "content_id"
-    viewinghistory ||--o{ profile : "profile_id"
-    watchlist ||--o{ content : "content_id"
-    watchlist ||--o{ profile : "profile_id"
-    subscription ||--o{ account : "account_id"
-    subscription ||--o{ subscription_type : "subscription_type_id"
-    invoice ||--o{ subscription : "subscription_id"
-    account ||--o{ previous_password_hash : "account_id"
-```
+    
+    account ||--o{ profile : "has"
+    profile ||--o{ viewinghistory : "has"
+    profile ||--o{ watchlist : "has"
+    account ||--o{ subscription : "has"
+    subscription ||--o{ invoice : "generates"
+    content_metadata ||--o{ content : "describes"
+    content_metadata ||--o{ genre : "categorized by"
+    content_metadata ||--o{ language : "available in"
+    content_metadata ||--o{ subtitle : "has"
+    content_metadata ||--o{ content_rating : "rated by"
+    viewinghistory ||--o{ content : "tracks"
+    watchlist ||--o{ content : "contains"
+    subscription ||--o{ subscription_type : "of type"
+    account ||--o{ previous_password_hash : "stores"
