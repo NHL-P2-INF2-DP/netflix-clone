@@ -13,7 +13,7 @@
     "prepare": "husky"
   },
   "dependencies": {
-    "@prisma/client": "5.22.0",
+    "@prisma/client": "6.0.1",
     "@tanstack/react-query": "^5.60.5",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
