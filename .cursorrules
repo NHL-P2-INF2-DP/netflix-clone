@@ -9,7 +9,6 @@ Project-specific rules:
 
 Database:
 - Use PostgreSQL for the database.
-- Use views and stored procedures for querying data.
 
 Code style:
 - Use PascalCase for class names and camelCase for variables.
