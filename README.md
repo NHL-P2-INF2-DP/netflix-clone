@@ -26,8 +26,11 @@ To learn more about Next.js, take a look at the following resources:
 ## 🚀 Extra Libraries used
 
 - [@tanstack/react-query](https://tanstack.com/query/v5) - Fetching data on the client
+- [@tanstack/react-table](https://tanstack.com/table) - Table component
 - [zod](https://zod.dev/) - Validation
 - [ShadCN](https://shadcn.com/) - UI components
+- [better-auth](https://better-auth.com/) - Authentication
+- [prisma](https://prisma.io/) - Database ORM
 
 ## 🚧 Commit Message Guidelines
 
