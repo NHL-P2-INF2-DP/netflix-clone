@@ -1,10 +1,9 @@
 import type { NextRequest } from 'next/server';
 
 import { headers } from 'next/headers';
+import { NextResponse } from 'next/server';
 
 import { auth } from '@/lib/auth';
-
-import { errorResponse } from './api-response';
 
 export async function authenticateRequest(request: NextRequest) {
   try {
@@ -13,13 +12,16 @@ export async function authenticateRequest(request: NextRequest) {
     });
 
     if (!session || !session.user) {
-      return errorResponse('Unauthorized', 401);
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     return session;
   }
   catch (error) {
     console.error('Authentication error:', error);
-    return errorResponse('Authentication failed', 401);
+    return NextResponse.json(
+      { error: 'Authentication failed' },
+      { status: 401 },
+    );
   }
 }

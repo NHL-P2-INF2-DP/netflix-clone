@@ -1,13 +1,11 @@
+import type { NextRequest } from 'next/server';
+
 import { NextResponse } from 'next/server';
 
 // GET /api/content-metadata/{id} - Get specific metadata
-export async function GET(
-  request: Request,
-  { params }: { params: { id: string } },
-) {
+export async function GET(request: NextRequest) {
   try {
-    const { id } = params;
-    // TODO: Implement database query to get specific metadata
+    const { id } = await request.json();
     return NextResponse.json(
       { message: `Get metadata with ID: ${id}` },
       { status: 200 },
@@ -22,14 +20,9 @@ export async function GET(
 }
 
 // PUT /api/content-metadata/{id} - Update metadata
-export async function PUT(
-  request: Request,
-  { params }: { params: { id: string } },
-) {
+export async function PUT(request: NextRequest) {
   try {
-    const { id } = params;
-    const body = await request.json();
-    // TODO: Implement metadata update logic
+    const { id, ...body } = await request.json();
     return NextResponse.json(
       { message: `Update metadata with ID: ${id}` },
       { status: 200 },
@@ -44,13 +37,9 @@ export async function PUT(
 }
 
 // DELETE /api/content-metadata/{id} - Delete metadata
-export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } },
-) {
+export async function DELETE(request: NextRequest) {
   try {
-    const { id } = params;
-    // TODO: Implement metadata deletion logic
+    const { id } = await request.json();
     return NextResponse.json(
       { message: `Delete metadata with ID: ${id}` },
       { status: 200 },

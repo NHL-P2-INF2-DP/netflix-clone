@@ -1,11 +1,10 @@
+import type { NextRequest } from 'next/server';
+
 import { NextResponse } from 'next/server';
 
-export async function GET(
-  request: Request,
-  { params }: { params: { id: string } },
-) {
+export async function GET(request: NextRequest) {
   try {
-    const { id } = params;
+    const { id } = await request.json();
     return NextResponse.json(
       { message: `Get subscription with ID: ${id}` },
       { status: 200 },
@@ -19,13 +18,9 @@ export async function GET(
   }
 }
 
-export async function PUT(
-  request: Request,
-  { params }: { params: { id: string } },
-) {
+export async function PUT(request: NextRequest) {
   try {
-    const { id } = params;
-    const body = await request.json();
+    const { id, ...body } = await request.json();
     return NextResponse.json(
       { message: `Update subscription with ID: ${id}` },
       { status: 200 },
@@ -39,20 +34,17 @@ export async function PUT(
   }
 }
 
-export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } },
-) {
+export async function DELETE(request: NextRequest) {
   try {
-    const { id } = params;
+    const { id } = await request.json();
     return NextResponse.json(
-      { message: `Cancel subscription with ID: ${id}` },
+      { message: `Delete subscription with ID: ${id}` },
       { status: 200 },
     );
   }
   catch (error) {
     return NextResponse.json(
-      { error: 'Failed to cancel subscription' },
+      { error: 'Failed to delete subscription' },
       { status: 500 },
     );
   }

@@ -1,13 +1,11 @@
+import type { NextRequest } from 'next/server';
+
 import { NextResponse } from 'next/server';
 
 // GET /api/genres/{id} - Get specific genre
-export async function GET(
-  request: Request,
-  { params }: { params: { id: string } },
-) {
+export async function GET(request: NextRequest) {
   try {
-    const { id } = params;
-    // TODO: Implement database query to get specific genre
+    const { id } = await request.json();
     return NextResponse.json(
       { message: `Get genre with ID: ${id}` },
       { status: 200 },
@@ -22,14 +20,9 @@ export async function GET(
 }
 
 // PUT /api/genres/{id} - Update genre
-export async function PUT(
-  request: Request,
-  { params }: { params: { id: string } },
-) {
+export async function PUT(request: NextRequest) {
   try {
-    const { id } = params;
-    const body = await request.json();
-    // TODO: Implement genre update logic
+    const { id, ...body } = await request.json();
     return NextResponse.json(
       { message: `Update genre with ID: ${id}` },
       { status: 200 },
@@ -44,13 +37,9 @@ export async function PUT(
 }
 
 // DELETE /api/genres/{id} - Delete genre
-export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } },
-) {
+export async function DELETE(request: NextRequest) {
   try {
-    const { id } = params;
-    // TODO: Implement genre deletion logic
+    const { id } = await request.json();
     return NextResponse.json(
       { message: `Delete genre with ID: ${id}` },
       { status: 200 },

@@ -1,11 +1,10 @@
+import type { NextRequest } from 'next/server';
+
 import { NextResponse } from 'next/server';
 
-export async function GET(
-  request: Request,
-  { params }: { params: { profile_id: string } },
-) {
+export async function GET(request: NextRequest) {
   try {
-    const { profile_id } = params;
+    const { profile_id } = await request.json();
     return NextResponse.json(
       { message: `Get watchlist for profile ID: ${profile_id}` },
       { status: 200 },

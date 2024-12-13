@@ -1,13 +1,11 @@
+import type { NextRequest } from 'next/server';
+
 import { NextResponse } from 'next/server';
 
 // GET /api/content/{id} - Get specific content
-export async function GET(
-  request: Request,
-  { params }: { params: { id: string } },
-) {
+export async function GET(request: NextRequest) {
   try {
-    const { id } = params;
-    // TODO: Implement database query to get specific content
+    const { id } = await request.json();
     return NextResponse.json(
       { message: `Get content with ID: ${id}` },
       { status: 200 },
@@ -22,14 +20,9 @@ export async function GET(
 }
 
 // PUT /api/content/{id} - Update content
-export async function PUT(
-  request: Request,
-  { params }: { params: { id: string } },
-) {
+export async function PUT(request: NextRequest) {
   try {
-    const { id } = params;
-    const body = await request.json();
-    // TODO: Implement content update logic
+    const { id, ...body } = await request.json();
     return NextResponse.json(
       { message: `Update content with ID: ${id}` },
       { status: 200 },
@@ -44,13 +37,9 @@ export async function PUT(
 }
 
 // DELETE /api/content/{id} - Delete content
-export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } },
-) {
+export async function DELETE(request: NextRequest) {
   try {
-    const { id } = params;
-    // TODO: Implement content deletion logic
+    const { id } = await request.json();
     return NextResponse.json(
       { message: `Delete content with ID: ${id}` },
       { status: 200 },

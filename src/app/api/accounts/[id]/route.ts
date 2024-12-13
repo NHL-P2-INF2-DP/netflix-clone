@@ -1,12 +1,11 @@
+import type { NextRequest } from 'next/server';
+
 import { NextResponse } from 'next/server';
 
 // GET /api/accounts/{id} - Get specific account
-export async function GET(
-  request: Request,
-  { params }: { params: { id: string } },
-) {
+export async function GET(request: NextRequest) {
   try {
-    const { id } = params;
+    const { id } = await request.json();
     // TODO: Implement database query to get specific account
     return NextResponse.json(
       { message: `Get account with ID: ${id}` },
@@ -22,13 +21,9 @@ export async function GET(
 }
 
 // PUT /api/accounts/{id} - Update account
-export async function PUT(
-  request: Request,
-  { params }: { params: { id: string } },
-) {
+export async function PUT(request: NextRequest) {
   try {
-    const { id } = params;
-    const body = await request.json();
+    const { id, ...body } = await request.json();
     // TODO: Implement account update logic
     return NextResponse.json(
       { message: `Update account with ID: ${id}` },
@@ -44,12 +39,9 @@ export async function PUT(
 }
 
 // DELETE /api/accounts/{id} - Delete account
-export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } },
-) {
+export async function DELETE(request: NextRequest) {
   try {
-    const { id } = params;
+    const { id } = await request.json();
     // TODO: Implement account deletion logic
     return NextResponse.json(
       { message: `Delete account with ID: ${id}` },

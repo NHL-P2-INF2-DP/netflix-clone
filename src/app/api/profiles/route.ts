@@ -1,14 +1,15 @@
 import type { NextRequest } from 'next/server';
 
-import { errorResponse, successResponse } from '@/lib/api-response';
+import { NextResponse } from 'next/server';
+
 import { authenticateRequest } from '@/lib/auth-middleware';
 import prisma from '@/lib/prisma';
 
 // GET /api/profiles - Get all profiles
-export async function GET(request: NextRequest) {
+export async function GET(request: NextRequest): Promise<Response> {
   const authResult = await authenticateRequest(request);
   if ('error' in authResult)
-    return authResult;
+    return NextResponse.json(authResult, { status: 401 });
 
   try {
     const profiles = await prisma.profile.findMany({
@@ -19,19 +20,25 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    return successResponse(profiles);
+    return NextResponse.json({
+      data: profiles,
+      message: 'Profiles fetched successfully',
+    });
   }
   catch (error) {
     console.error('Failed to fetch profiles:', error);
-    return errorResponse('Failed to fetch profiles');
+    return NextResponse.json(
+      { error: 'Failed to fetch profiles' },
+      { status: 500 },
+    );
   }
 }
 
 // POST /api/profiles - Create a new profile
-export async function POST(request: NextRequest) {
+export async function POST(request: NextRequest): Promise<Response> {
   const authResult = await authenticateRequest(request);
   if ('error' in authResult)
-    return authResult;
+    return NextResponse.json(authResult, { status: 401 });
 
   try {
     const body = await request.json();
@@ -43,7 +50,10 @@ export async function POST(request: NextRequest) {
     });
 
     if (!account) {
-      return errorResponse('Invalid account ID', 403);
+      return NextResponse.json(
+        { error: 'Invalid account ID' },
+        { status: 403 },
+      );
     }
 
     const profile = await prisma.profile.create({
@@ -59,10 +69,16 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return successResponse(profile, 'Profile created successfully', 201);
+    return NextResponse.json(
+      { data: profile, message: 'Profile created successfully' },
+      { status: 201 },
+    );
   }
   catch (error) {
     console.error('Failed to create profile:', error);
-    return errorResponse('Failed to create profile');
+    return NextResponse.json(
+      { error: 'Failed to create profile' },
+      { status: 500 },
+    );
   }
 }

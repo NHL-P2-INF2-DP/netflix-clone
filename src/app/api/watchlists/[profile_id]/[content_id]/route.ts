@@ -1,21 +1,38 @@
+import type { NextRequest } from 'next/server';
+
 import { NextResponse } from 'next/server';
 
-export async function DELETE(
-  request: Request,
-  { params }: { params: { profile_id: string; content_id: string } },
-) {
+export async function PUT(request: NextRequest) {
   try {
-    const { profile_id, content_id } = params;
+    const { profile_id, content_id } = await request.json();
     return NextResponse.json(
       {
-        message: `Remove content ${content_id} from watchlist of profile ${profile_id}`,
+        message: `Add content ${content_id} to watchlist for profile ${profile_id}`,
       },
       { status: 200 },
     );
   }
   catch (error) {
     return NextResponse.json(
-      { error: 'Failed to remove content from watchlist' },
+      { error: 'Failed to update watchlist' },
+      { status: 500 },
+    );
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const { profile_id, content_id } = await request.json();
+    return NextResponse.json(
+      {
+        message: `Remove content ${content_id} from watchlist for profile ${profile_id}`,
+      },
+      { status: 200 },
+    );
+  }
+  catch (error) {
+    return NextResponse.json(
+      { error: 'Failed to update watchlist' },
       { status: 500 },
     );
   }

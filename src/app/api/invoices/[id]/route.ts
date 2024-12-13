@@ -1,11 +1,10 @@
+import type { NextRequest } from 'next/server';
+
 import { NextResponse } from 'next/server';
 
-export async function GET(
-  request: Request,
-  { params }: { params: { id: string } },
-) {
+export async function GET(request: NextRequest) {
   try {
-    const { id } = params;
+    const { id } = await request.json();
     return NextResponse.json(
       { message: `Get invoice with ID: ${id}` },
       { status: 200 },
@@ -19,13 +18,9 @@ export async function GET(
   }
 }
 
-export async function PUT(
-  request: Request,
-  { params }: { params: { id: string } },
-) {
+export async function PUT(request: NextRequest) {
   try {
-    const { id } = params;
-    const body = await request.json();
+    const { id, ...body } = await request.json();
     return NextResponse.json(
       { message: `Update invoice with ID: ${id}` },
       { status: 200 },
@@ -39,12 +34,9 @@ export async function PUT(
   }
 }
 
-export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } },
-) {
+export async function DELETE(request: NextRequest) {
   try {
-    const { id } = params;
+    const { id } = await request.json();
     return NextResponse.json(
       { message: `Delete invoice with ID: ${id}` },
       { status: 200 },
