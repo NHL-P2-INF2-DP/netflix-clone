@@ -28,22 +28,6 @@ enum AgeRating {
   NC_17
 }
 
-model User {
-  id        BigInt  @id @default(autoincrement())
-  email     String  @unique
-  password  String
-  activated Boolean @default(true)
-  tokens    Token[]
-}
-
-model Token {
-  id        BigInt   @id @default(autoincrement())
-  userId    BigInt   @map("user_id")
-  token     String   @map("token")
-  createdAt DateTime @default(now()) @map("created_at")
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
 enum PaymentStatus {
   PAID
   UNPAID
@@ -115,7 +99,7 @@ model ContentMetadata {
   @@index([genreId])
 }
 
-model Account {
+model NetflixAccount {
   id                    BigInt                 @id @default(autoincrement())
   email                 String                 @unique
   password              String
@@ -130,11 +114,11 @@ model Account {
 }
 
 model PreviousPasswordHash {
-  id           BigInt   @id @default(autoincrement())
-  accountId    BigInt   @map("account_id")
-  passwordHash String   @map("password_hash")
-  createdAt    DateTime @default(now()) @map("created_at")
-  account      Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  id           BigInt         @id @default(autoincrement())
+  accountId    BigInt         @map("account_id")
+  passwordHash String         @map("password_hash")
+  createdAt    DateTime       @default(now()) @map("created_at")
+  account      NetflixAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
 
   @@index([accountId])
 }
@@ -148,7 +132,7 @@ model Profile {
   language       String
   createdAt      DateTime         @default(now()) @map("created_at")
   updatedAt      DateTime         @updatedAt @map("updated_at")
-  account        Account          @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  account        NetflixAccount   @relation(fields: [accountId], references: [id], onDelete: Cascade)
   ViewingHistory ViewingHistory[]
   Watchlist      Watchlist[]
 
@@ -172,9 +156,9 @@ model Subscription {
   createdAt          DateTime @default(now()) @map("created_at")
   updatedAt          DateTime @updatedAt @map("updated_at")
 
-  account          Account          @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  account          NetflixAccount   @relation(fields: [accountId], references: [id], onDelete: Cascade)
   subscriptionType SubscriptionType @relation(fields: [subscriptionTypeId], references: [id], onDelete: Restrict)
-  referredBy       Account?         @relation("Referral", fields: [referralId], references: [id], onDelete: SetNull)
+  referredBy       NetflixAccount?  @relation("Referral", fields: [referralId], references: [id], onDelete: SetNull)
   Invoice          Invoice[]
 
   @@index([accountId])
@@ -212,4 +196,75 @@ model Watchlist {
   @@unique([profileId, contentId])
   @@index([profileId])
   @@index([contentId])
+}
+
+// authentication
+
+model User {
+  id            String    @id
+  name          String
+  email         String
+  emailVerified Boolean
+  image         String?
+  createdAt     DateTime
+  updatedAt     DateTime
+  sessions      Session[]
+  accounts      Account[]
+
+  @@unique([email])
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime
+  updatedAt DateTime
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime
+  updatedAt             DateTime
+
+  @@map("account")
+}
+
+model Verification {
+  id         String    @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime?
+  updatedAt  DateTime?
+
+  @@map("verification")
+}
+
+model Jwks {
+  id         String   @id
+  publicKey  String
+  privateKey String
+  createdAt  DateTime
+
+  @@map("jwks")
 }
