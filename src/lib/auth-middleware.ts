@@ -12,13 +12,23 @@ export async function authenticateRequest(request: NextRequest) {
     });
 
     if (!session || !session.user) {
+      const jwtAuth = await fetch('/api/auth/token', {
+        headers: await headers(),
+      });
+
+      if (!jwtAuth.ok) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+    }
+
+    if (!session || !session.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     return session;
   }
   catch (error) {
-    console.error('Authentication error:', error);
+    logger.error('Authentication error:', error);
     return NextResponse.json(
       { error: 'Authentication failed' },
       { status: 401 },

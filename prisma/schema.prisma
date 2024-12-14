@@ -8,9 +8,9 @@ generator client {
   previewFeatures = ["views"]
 }
 
-generator zod {
-  provider       = "zod-prisma-types"
-}
+// generator zod {
+//   provider = "zod-prisma-types"
+// }
 
 datasource db {
   provider = "postgresql"
@@ -132,7 +132,7 @@ model Profile {
   name           String
   profileImage   String?          @map("profile_image")
   dateOfBirth    DateTime         @map("date_of_birth")
-  language       String
+  language       String           @default("en")
   createdAt      DateTime         @default(now()) @map("created_at")
   updatedAt      DateTime         @updatedAt @map("updated_at")
   account        NetflixAccount   @relation(fields: [accountId], references: [id], onDelete: Cascade)
@@ -185,16 +185,22 @@ model ViewingHistory {
   profile            Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
   content            Content  @relation(fields: [contentId], references: [id], onDelete: Cascade)
 
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
   @@index([profileId])
   @@index([contentId])
 }
 
 model Watchlist {
-  id        String  @id @default(uuid())
-  profileId String  @map("profile_id")
-  contentId String  @map("content_id")
-  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  content   Content @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  id        String   @id @default(uuid())
+  profileId String   @map("profile_id")
+  contentId String   @map("content_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  content Content @relation(fields: [contentId], references: [id], onDelete: Cascade)
 
   @@unique([profileId, contentId])
   @@index([profileId])
