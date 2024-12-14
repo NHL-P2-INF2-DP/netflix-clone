@@ -5,7 +5,11 @@ import { NextResponse } from 'next/server';
 
 import { auth } from '@/lib/auth';
 
+import { logger } from './pinologger';
+
 export async function authenticateRequest(request: NextRequest) {
+  const log = logger.child({ module: 'totoro' });
+
   try {
     const session = await auth.api.getSession({
       headers: await headers(),
@@ -28,7 +32,7 @@ export async function authenticateRequest(request: NextRequest) {
     return session;
   }
   catch (error) {
-    logger.error('Authentication error:', error);
+    log.debug('Authentication error:', error);
     return NextResponse.json(
       { error: 'Authentication failed' },
       { status: 401 },
