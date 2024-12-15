@@ -4,7 +4,7 @@ const nextConfig: NextConfig = {
   output: "standalone",
   serverExternalPackages: ["pino", "pino-pretty"],
   experimental: {
-    typedRoutes: true,
+    // typedRoutes: true,
   },
 };
 
