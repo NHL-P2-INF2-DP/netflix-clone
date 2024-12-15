@@ -1,13 +1,11 @@
 import type { NextRequest } from 'next/server';
 
-import { createResponse } from '@/lib/utils';
+import { ResponseFormatter } from '@/lib/classes/api-responses';
 
 export function GET(request: NextRequest) {
-  return createResponse(
-    {
-      status: 'ok',
-    },
-    request.headers.get('Accept'),
+  return ResponseFormatter.formatResponse(
+    { message: 'OK' },
+    request.headers.get('Accept') || 'application/json',
     200,
   );
 }

@@ -1,15 +1,13 @@
 import type { NextRequest } from 'next/server';
 
 import { headers } from 'next/headers';
-import { NextResponse } from 'next/server';
 
 import { auth } from '@/lib/auth';
 
+import { ResponseFormatter } from './classes/api-responses';
 import { logger } from './pinologger';
 
 export async function authenticateRequest(request: NextRequest) {
-  const log = logger.child({ module: 'totoro' });
-
   try {
     const session = await auth.api.getSession({
       headers: await headers(),
@@ -21,21 +19,30 @@ export async function authenticateRequest(request: NextRequest) {
       });
 
       if (!jwtAuth.ok) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        return ResponseFormatter.formatError(
+          { message: 'Unauthorized' },
+          request.headers.get('Accept') || 'application/json',
+          401,
+        );
       }
     }
 
     if (!session || !session.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return ResponseFormatter.formatError(
+        { message: 'Unauthorized' },
+        request.headers.get('Accept') || 'application/json',
+        401,
+      );
     }
 
     return session;
   }
   catch (error) {
-    log.debug('Authentication error:', error);
-    return NextResponse.json(
-      { error: 'Authentication failed' },
-      { status: 401 },
+    logger.debug('Authentication error:', error);
+    return ResponseFormatter.formatError(
+      { message: 'Authentication failed' },
+      request.headers.get('Accept') || 'application/json',
+      401,
     );
   }
 }
