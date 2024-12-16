@@ -1,29 +1,33 @@
-import type { Metadata } from 'next';
+import type { Metadata } from "next"
+import { Inter } from 'next/font/google'
+import "./globals.css"
+import { ThemeProvider } from "../components/theme-provider"
 
-import { Geist } from 'next/font/google';
-
-import '@/styles/globals.css';
-import Providers from '@/components/providers';
-
-const geist = Geist({
-  subsets: ['latin'],
-});
+const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: 'Netflix Clone ',
-  description: 'Een app voor Data Proccesing van NHL Stenden',
-};
+  title: "Netflix Employee Dashboard",
+  description: "Management panel for Netflix employees",
+}
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: {
+  children: React.ReactNode
+}) {
   return (
-    <html lang="en">
-      <body className={`antialiased ${geist.className}`}>
-        <Providers>{children}</Providers>
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${inter.className} min-h-screen bg-background antialiased`}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem={false}
+          disableTransitionOnChange
+        >
+          {children}
+        </ThemeProvider>
       </body>
     </html>
-  );
+  )
 }
+
