@@ -1,22 +1,22 @@
 export default {
-  extends: ['@commitlint/config-conventional'],
+  extends: ["@commitlint/config-conventional"],
   rules: {
-    'type-enum': [
+    "type-enum": [
       2,
-      'always',
+      "always",
       [
-        'ci',
-        'chore',
-        'docs',
-        'ticket',
-        'feat',
-        'fix',
-        'perf',
-        'refactor',
-        'revert',
-        'style',
+        "ci",
+        "chore",
+        "docs",
+        "ticket",
+        "feat",
+        "fix",
+        "perf",
+        "refactor",
+        "revert",
+        "style",
       ],
     ],
-    'header-max-length': [2, 'always', 150],
+    "header-max-length": [2, "always", 200],
   },
 };
