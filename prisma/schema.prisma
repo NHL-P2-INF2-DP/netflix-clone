@@ -24,7 +24,6 @@ enum ContentType {
 }
 
 enum Role {
-  API
   JUNIOR
   MEDIOR
   SENIOR
