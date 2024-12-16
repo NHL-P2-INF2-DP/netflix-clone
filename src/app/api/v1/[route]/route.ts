@@ -11,7 +11,9 @@ import { logger } from '@/lib/pinologger';
 import prisma from '@/lib/prisma';
 import { checkRoutePermission, getModelName, Routes } from '@/lib/routes';
 
-// Define allowed HTTP methods and their corresponding permission checks
+/**
+ * Mapping of HTTP methods to their corresponding permission types
+ */
 const METHOD_PERMISSION_MAP = {
   GET: 'read',
   POST: 'create',
@@ -19,10 +21,14 @@ const METHOD_PERMISSION_MAP = {
   DELETE: 'delete',
 } as const;
 
-// Type for Prisma model methods
+/**
+ * Type definition for Prisma model methods
+ */
 type PrismaModelMethod = 'findMany' | 'create' | 'update' | 'delete';
 
-// Mapping of HTTP methods to Prisma model methods
+/**
+ * Mapping of HTTP methods to their corresponding Prisma model methods
+ */
 const METHOD_TO_PRISMA_METHOD: Record<string, PrismaModelMethod> = {
   GET: 'findMany',
   POST: 'create',
@@ -30,16 +36,33 @@ const METHOD_TO_PRISMA_METHOD: Record<string, PrismaModelMethod> = {
   DELETE: 'delete',
 };
 
-// Add these type definitions at the top of the file
+/**
+ * Interface for pagination parameters
+ * @interface PaginationParams
+ * @property {number} [page] - The page number to retrieve
+ * @property {number} [limit] - The number of items per page
+ */
 interface PaginationParams {
   page?: number;
   limit?: number;
 }
 
+/**
+ * Interface for search parameters
+ * @interface SearchParams
+ * @property {string} [key] - Dynamic key-value pairs for search criteria
+ */
 interface SearchParams {
   [key: string]: string | undefined;
 }
 
+/**
+ * Handles GET requests for the dynamic route
+ * @param request - The incoming Next.js request
+ * @param context - The context object containing route parameters
+ * @param context.params - The route parameters containing the dynamic route value
+ * @returns Promise resolving to the API response
+ */
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ route: string }> },
@@ -51,6 +74,13 @@ export async function GET(
   return response;
 }
 
+/**
+ * Handles POST requests for the dynamic route
+ * @param request - The incoming Next.js request
+ * @param params - The context object containing route parameters
+ * @param params.params - The route parameters containing the dynamic route value
+ * @returns Promise resolving to the API response
+ */
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ route: string }> },
@@ -62,6 +92,13 @@ export async function POST(
   return response;
 }
 
+/**
+ * Handles PUT requests for the dynamic route by validating authentication, permissions, and processing the request
+ * @param request - The incoming Next.js request
+ * @param context - The context object containing route parameters
+ * @param context.params - The route parameters containing the dynamic route value
+ * @returns Promise resolving to the API response
+ */
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ route: string }> },
@@ -73,6 +110,14 @@ export async function PUT(
   return response;
 }
 
+/**
+ * Handles all API requests by validating authentication, permissions, and processing the request
+ * @param request - The incoming Next.js request
+ * @param context - The context object containing route parameters
+ * @param context.params - The route parameters containing the dynamic route value
+ * @returns Promise resolving to the formatted API response
+ * @throws Will throw an error if request processing fails
+ */
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ route: string }> },
@@ -85,13 +130,14 @@ export async function DELETE(
 }
 
 /**
- * Handle a request to the API.
- * @param request The request to handle
- * @param context The request context
- * @param method The HTTP method used for the request
- * @returns A response to the request
+ * Handles all API requests by validating authentication, permissions, and processing the request
+ * @param request - The incoming Next.js request
+ * @param context - The context object containing route parameters
+ * @param context.params - The route parameters containing the dynamic route value
+ * @param method - The HTTP method of the request
+ * @returns Promise resolving to the formatted API response
+ * @throws Will throw an error if request processing fails
  */
-
 async function handleRequest(
   request: NextRequest,
   { params }: { params: Promise<{ route: string }> },
@@ -226,7 +272,7 @@ async function handleRequest(
         // Return paginated response, even if empty
         return ResponseFormatter.formatResponse(
           {
-            data: result,
+            result,
             pagination: {
               currentPage: pagination.page,
               totalPages: Math.ceil(totalCount / pagination.limit!),
