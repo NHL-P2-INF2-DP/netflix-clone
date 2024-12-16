@@ -2,7 +2,6 @@ import type { Role } from '@prisma/client';
 import type { NextRequest } from 'next/server';
 
 import { StatusCodes } from 'http-status-codes';
-import { z } from 'zod';
 
 import type { RouteKey } from '@/lib/routes';
 
@@ -54,9 +53,6 @@ const METHOD_TO_PRISMA_METHOD: Record<string, PrismaModelMethod> = {
   PUT: 'update',
   DELETE: 'delete',
 };
-
-// UUID validation schema
-const UUIDSchema = z.string().uuid();
 
 // Add these type definitions at the top of the file
 interface PaginationParams {
@@ -178,22 +174,6 @@ async function handleRequest(
     }
 
     const url = new URL(request.url);
-    const pathParts = url.pathname.split('/');
-    const id
-      = pathParts[pathParts.length - 1] !== route
-        ? pathParts[pathParts.length - 1]
-        : undefined;
-
-    if (id) {
-      const uuidValidation = UUIDSchema.safeParse(id);
-      if (!uuidValidation.success) {
-        return ResponseFormatter.formatError(
-          { message: 'Invalid UUID format' },
-          requestHeader,
-          StatusCodes.BAD_REQUEST,
-        );
-      }
-    }
 
     // Extract pagination and search parameters from URL
     const searchParams = Object.fromEntries(url.searchParams.entries());
@@ -284,18 +264,6 @@ async function handleRequest(
         );
       }
 
-      case 'findUnique':
-        if (!id) {
-          return ResponseFormatter.formatError(
-            { message: 'ID is required for findUnique' },
-            requestHeader,
-            StatusCodes.BAD_REQUEST,
-          );
-        }
-        result = await (prisma[modelName as PrismaModel] as any).findUnique({
-          where: { id },
-        });
-        break;
       case 'create':
         result = await (prisma[modelName as PrismaModel] as any).create({
           data: { ...body, createdAt: new Date(), updatedAt: new Date() },
@@ -303,7 +271,7 @@ async function handleRequest(
         statusCode = StatusCodes.CREATED; // Return 201 for creation
         break;
       case 'update':
-        if (!id) {
+        if (!searchParams.id) {
           return ResponseFormatter.formatError(
             { message: 'ID is required for update' },
             requestHeader,
@@ -311,12 +279,12 @@ async function handleRequest(
           );
         }
         result = await (prisma[modelName as PrismaModel] as any).update({
-          where: { id },
+          where: { id: searchParams.id },
           data: { ...body, updatedAt: new Date() },
         });
         break;
       case 'delete':
-        if (!id) {
+        if (!searchParams.id) {
           return ResponseFormatter.formatError(
             { message: 'ID is required for delete' },
             requestHeader,
@@ -324,7 +292,7 @@ async function handleRequest(
           );
         }
         result = await (prisma[modelName as PrismaModel] as any).delete({
-          where: { id },
+          where: { id: searchParams.id },
         });
         break;
       default:
