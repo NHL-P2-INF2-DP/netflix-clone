@@ -58,6 +58,16 @@ const METHOD_TO_PRISMA_METHOD: Record<string, PrismaModelMethod> = {
 // UUID validation schema
 const UUIDSchema = z.string().uuid();
 
+// Add these type definitions at the top of the file
+interface PaginationParams {
+  page?: number;
+  limit?: number;
+}
+
+interface SearchParams {
+  [key: string]: string | undefined;
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ route: string }> },
@@ -185,14 +195,95 @@ async function handleRequest(
       }
     }
 
+    // Extract pagination and search parameters from URL
+    const searchParams = Object.fromEntries(url.searchParams.entries());
+
+    // Parse pagination parameters
+    const pagination: PaginationParams = {
+      page: searchParams.page ? Number.parseInt(searchParams.page, 10) : 1,
+      limit: searchParams.limit ? Number.parseInt(searchParams.limit, 10) : 10,
+    };
+
+    // Remove pagination params from search params
+    delete searchParams.page;
+    delete searchParams.limit;
+
+    // Validate pagination parameters
+    if (
+      pagination.page
+      && (Number.isNaN(pagination.page) || pagination.page < 1)
+    ) {
+      return ResponseFormatter.formatError(
+        { message: 'Invalid page number' },
+        requestHeader,
+        StatusCodes.BAD_REQUEST,
+      );
+    }
+
+    if (
+      pagination.limit
+      && (Number.isNaN(pagination.limit) || pagination.limit < 1)
+    ) {
+      return ResponseFormatter.formatError(
+        { message: 'Invalid limit number' },
+        requestHeader,
+        StatusCodes.BAD_REQUEST,
+      );
+    }
+
     let result;
     let statusCode = StatusCodes.OK; // Default status for successful operations
     type PrismaModel = keyof typeof prisma;
 
     switch (prismaMethod) {
-      case 'findMany':
-        result = await (prisma[modelName as PrismaModel] as any).findMany();
-        break;
+      case 'findMany': {
+        // Build the where clause for searching
+        const where: any = {};
+
+        // Process search parameters
+        Object.entries(searchParams).forEach(([key, value]) => {
+          if (value) {
+            where[key] = {
+              contains: value,
+              mode: 'insensitive', // Case-insensitive search
+            };
+          }
+        });
+
+        // Get total count for pagination
+        const totalCount = await (
+          prisma[modelName as PrismaModel] as any
+        ).count({
+          where,
+        });
+
+        // Calculate pagination values
+        const skip = (pagination.page! - 1) * pagination.limit!;
+        const totalPages = Math.ceil(totalCount / pagination.limit!);
+
+        // Execute the query with pagination and search
+        result = await (prisma[modelName as PrismaModel] as any).findMany({
+          where,
+          skip,
+          take: pagination.limit,
+        });
+
+        // Return paginated response, even if empty
+        return ResponseFormatter.formatResponse(
+          {
+            data: result,
+            pagination: {
+              currentPage: pagination.page,
+              totalPages: Math.ceil(totalCount / pagination.limit!),
+              totalItems: totalCount,
+              itemsPerPage: pagination.limit,
+            },
+          },
+          requestHeader,
+          StatusCodes.OK,
+        );
+      }
+
       case 'findUnique':
         if (!id) {
           return ResponseFormatter.formatError(
