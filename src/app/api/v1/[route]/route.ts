@@ -1,3 +1,4 @@
+import type { Role } from '@prisma/client';
 import type { NextRequest } from 'next/server';
 
 import { StatusCodes } from 'http-status-codes';
@@ -139,9 +140,9 @@ async function handleRequest(
 
     const permissionType
       = METHOD_PERMISSION_MAP[method as keyof typeof METHOD_PERMISSION_MAP];
-    if (!checkRoutePermission(routeKey, permissionType)) {
+    if (!checkRoutePermission(routeKey, auth.user.role as Role)) {
       return ResponseFormatter.formatError(
-        { message: 'Permission denied' },
+        { message: 'You are not authorized to perform this action' },
         requestHeader,
         StatusCodes.FORBIDDEN,
       );
@@ -152,18 +153,17 @@ async function handleRequest(
     const body
       = method !== 'GET' && method !== 'DELETE' ? await request.json() : null;
 
-    if (body && ROUTE_SCHEMA_MAP[routeKey]) {
-      try {
-        ROUTE_SCHEMA_MAP[routeKey].parse(body);
-      }
-      catch (validationError) {
-        if (validationError instanceof z.ZodError) {
-          return ResponseFormatter.formatError(
-            { message: 'Validation Failed', details: validationError.errors },
-            requestHeader,
-            StatusCodes.BAD_REQUEST,
-          );
-        }
+    // validate the body
+    const bodySchema
+      = ROUTE_SCHEMA_MAP[routeKey as keyof typeof ROUTE_SCHEMA_MAP];
+    if (body && bodySchema) {
+      const parsedBody = bodySchema.safeParse(body);
+      if (!parsedBody.success) {
+        return ResponseFormatter.formatError(
+          { message: 'Validation Failed', details: parsedBody.error.errors },
+          requestHeader,
+          StatusCodes.BAD_REQUEST,
+        );
       }
     }
 

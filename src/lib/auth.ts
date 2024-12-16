@@ -19,7 +19,6 @@ export const auth = betterAuth({
       role: {
         type: 'string',
         enum: Role,
-        default: Role.JUNIOR,
       },
     },
   },
