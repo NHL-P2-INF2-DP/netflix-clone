@@ -23,6 +23,13 @@ enum ContentType {
   DOCUMENTARY
 }
 
+enum Role {
+  API
+  JUNIOR
+  MEDIOR
+  SENIOR
+}
+
 enum AgeRating {
   G
   PG
@@ -214,6 +221,7 @@ model User {
   name          String
   email         String
   emailVerified Boolean
+  role          Role      @default(JUNIOR)
   image         String?
   createdAt     DateTime
   updatedAt     DateTime
