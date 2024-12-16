@@ -1,10 +1,11 @@
 import type { NextRequest } from 'next/server';
 
+import { Role } from '@prisma/client';
 import { headers } from 'next/headers';
 
 import { logger } from '@/lib/pinologger';
 
-import type { Session } from '../auth-client';
+import type { Session } from '../auth';
 
 import { auth } from '../auth';
 
@@ -19,12 +20,12 @@ export abstract class AuthenticationService {
     // return session;
 
     // mock Authentication
-
     return {
       user: {
         id: '1',
         email: '1',
         name: '1',
+        role: Role.JUNIOR,
         createdAt: new Date(),
         updatedAt: new Date(),
         emailVerified: true,

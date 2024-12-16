@@ -1,128 +1,126 @@
-export const Routes = {
+import { Role } from '@prisma/client';
+
+// Define the permission types first
+export interface RoutePermissions {
+  [Role.JUNIOR]: boolean;
+  [Role.MEDIOR]: boolean;
+  [Role.SENIOR]: boolean;
+}
+
+export const Routes: Record<
+  string,
+  { modelName: string; permissions: RoutePermissions }
+> = {
   genre: {
     modelName: 'Genre',
     permissions: {
-      read: true,
-      create: false,
-      update: false,
-      delete: false,
+      [Role.JUNIOR]: true,
+      [Role.MEDIOR]: true,
+      [Role.SENIOR]: true,
     },
   },
   contentRating: {
     modelName: 'ContentRating',
     permissions: {
-      read: true,
-      create: false,
-      update: false,
-      delete: false,
+      [Role.JUNIOR]: true,
+      [Role.MEDIOR]: true,
+      [Role.SENIOR]: true,
     },
   },
   content: {
     modelName: 'Content',
     permissions: {
-      read: true,
-      create: true,
-      update: true,
-      delete: false,
+      [Role.JUNIOR]: true,
+      [Role.MEDIOR]: true,
+      [Role.SENIOR]: true,
     },
   },
   language: {
     modelName: 'Language',
     permissions: {
-      read: true,
-      create: false,
-      update: false,
-      delete: false,
+      [Role.JUNIOR]: true,
+      [Role.MEDIOR]: true,
+      [Role.SENIOR]: true,
     },
   },
   subtitle: {
     modelName: 'Subtitle',
     permissions: {
-      read: true,
-      create: true,
-      update: true,
-      delete: true,
+      [Role.JUNIOR]: true,
+      [Role.MEDIOR]: true,
+      [Role.SENIOR]: true,
     },
   },
   contentMetadata: {
     modelName: 'ContentMetadata',
     permissions: {
-      read: true,
-      create: false,
-      update: true,
-      delete: false,
+      [Role.JUNIOR]: true,
+      [Role.MEDIOR]: true,
+      [Role.SENIOR]: true,
     },
   },
   netflixAccount: {
     modelName: 'NetflixAccount',
     permissions: {
-      read: false,
-      create: false,
-      update: false,
-      delete: false,
+      [Role.JUNIOR]: false,
+      [Role.MEDIOR]: true,
+      [Role.SENIOR]: true,
     },
   },
   previousPasswordHash: {
     modelName: 'PreviousPasswordHash',
     permissions: {
-      read: false,
-      create: false,
-      update: false,
-      delete: false,
+      [Role.JUNIOR]: true,
+      [Role.MEDIOR]: true,
+      [Role.SENIOR]: true,
     },
   },
   profile: {
     modelName: 'Profile',
     permissions: {
-      read: true,
-      create: true,
-      update: true,
-      delete: true,
+      [Role.JUNIOR]: false,
+      [Role.MEDIOR]: true,
+      [Role.SENIOR]: true,
     },
   },
   subscriptionType: {
     modelName: 'SubscriptionType',
     permissions: {
-      read: true,
-      create: false,
-      update: false,
-      delete: false,
+      [Role.JUNIOR]: false,
+      [Role.MEDIOR]: false,
+      [Role.SENIOR]: true,
     },
   },
   subscription: {
     modelName: 'Subscription',
     permissions: {
-      read: true,
-      create: true,
-      update: false,
-      delete: false,
+      [Role.JUNIOR]: false,
+      [Role.MEDIOR]: false,
+      [Role.SENIOR]: true,
     },
   },
   invoice: {
     modelName: 'Invoice',
     permissions: {
-      read: true,
-      create: false,
-      update: false,
-      delete: false,
+      [Role.JUNIOR]: false,
+      [Role.MEDIOR]: false,
+      [Role.SENIOR]: true,
     },
   },
   viewingHistory: {
     modelName: 'ViewingHistory',
     permissions: {
-      read: true,
-      create: true,
-      update: false,
-      delete: false,
+      [Role.JUNIOR]: true,
+      [Role.MEDIOR]: true,
+      [Role.SENIOR]: true,
     },
   },
   watchlist: {
     modelName: 'Watchlist',
     permissions: {
-      read: true,
-      create: true,
-      update: false,
-      delete: true,
+      [Role.JUNIOR]: true,
+      [Role.MEDIOR]: true,
+      [Role.SENIOR]: true,
     },
   },
 } as const;
@@ -130,23 +128,12 @@ export const Routes = {
 // Define the type for route keys
 export type RouteKey = keyof typeof Routes;
 
-// Define the permission types
-export interface RoutePermissions {
-  read: boolean;
-  create: boolean;
-  update: boolean;
-  delete: boolean;
-}
-
 // Utility function to get model name
 export function getModelName(route: RouteKey): string {
   return Routes[route].modelName;
 }
 
 // Utility function to check permissions
-export function checkRoutePermission(
-  route: RouteKey,
-  operation: keyof RoutePermissions,
-): boolean {
-  return Routes[route].permissions[operation];
+export function checkRoutePermission(route: RouteKey, role: Role): boolean {
+  return Routes[route].permissions[role];
 }
