@@ -1,16 +1,23 @@
 import { Role } from '@prisma/client';
 
-// Define the permission types first
+import * as Schemas from '@/lib/schemas';
+
+// permissions for each role
 export interface RoutePermissions {
   [Role.JUNIOR]: boolean;
   [Role.MEDIOR]: boolean;
   [Role.SENIOR]: boolean;
 }
 
-export const Routes: Record<
-  string,
-  { modelName: string; permissions: RoutePermissions }
-> = {
+// Define the route configuration type
+export interface RouteConfig {
+  modelName: string;
+  permissions: RoutePermissions;
+  schema: any; // Zod schema
+}
+
+// routes and their permissions
+export const Routes: Record<string, RouteConfig> = {
   genre: {
     modelName: 'Genre',
     permissions: {
@@ -18,6 +25,7 @@ export const Routes: Record<
       [Role.MEDIOR]: true,
       [Role.SENIOR]: true,
     },
+    schema: Schemas.genreSchema,
   },
   contentRating: {
     modelName: 'ContentRating',
@@ -26,6 +34,7 @@ export const Routes: Record<
       [Role.MEDIOR]: true,
       [Role.SENIOR]: true,
     },
+    schema: Schemas.contentRatingSchema,
   },
   content: {
     modelName: 'Content',
@@ -34,6 +43,7 @@ export const Routes: Record<
       [Role.MEDIOR]: true,
       [Role.SENIOR]: true,
     },
+    schema: Schemas.contentSchema,
   },
   language: {
     modelName: 'Language',
@@ -42,6 +52,7 @@ export const Routes: Record<
       [Role.MEDIOR]: true,
       [Role.SENIOR]: true,
     },
+    schema: Schemas.languageSchema,
   },
   subtitle: {
     modelName: 'Subtitle',
@@ -50,6 +61,7 @@ export const Routes: Record<
       [Role.MEDIOR]: true,
       [Role.SENIOR]: true,
     },
+    schema: Schemas.subtitleSchema,
   },
   contentMetadata: {
     modelName: 'ContentMetadata',
@@ -58,6 +70,7 @@ export const Routes: Record<
       [Role.MEDIOR]: true,
       [Role.SENIOR]: true,
     },
+    schema: Schemas.contentMetadataSchema,
   },
   netflixAccount: {
     modelName: 'NetflixAccount',
@@ -66,6 +79,7 @@ export const Routes: Record<
       [Role.MEDIOR]: true,
       [Role.SENIOR]: true,
     },
+    schema: Schemas.netflixAccountSchema,
   },
   previousPasswordHash: {
     modelName: 'PreviousPasswordHash',
@@ -74,6 +88,7 @@ export const Routes: Record<
       [Role.MEDIOR]: true,
       [Role.SENIOR]: true,
     },
+    schema: Schemas.previousPasswordHashSchema,
   },
   profile: {
     modelName: 'Profile',
@@ -82,6 +97,7 @@ export const Routes: Record<
       [Role.MEDIOR]: true,
       [Role.SENIOR]: true,
     },
+    schema: Schemas.profileSchema,
   },
   subscriptionType: {
     modelName: 'SubscriptionType',
@@ -90,6 +106,7 @@ export const Routes: Record<
       [Role.MEDIOR]: false,
       [Role.SENIOR]: true,
     },
+    schema: Schemas.subscriptionTypeSchema,
   },
   subscription: {
     modelName: 'Subscription',
@@ -98,6 +115,7 @@ export const Routes: Record<
       [Role.MEDIOR]: false,
       [Role.SENIOR]: true,
     },
+    schema: Schemas.subscriptionSchema,
   },
   invoice: {
     modelName: 'Invoice',
@@ -106,6 +124,7 @@ export const Routes: Record<
       [Role.MEDIOR]: false,
       [Role.SENIOR]: true,
     },
+    schema: Schemas.invoiceSchema,
   },
   viewingHistory: {
     modelName: 'ViewingHistory',
@@ -114,6 +133,7 @@ export const Routes: Record<
       [Role.MEDIOR]: true,
       [Role.SENIOR]: true,
     },
+    schema: Schemas.viewingHistorySchema,
   },
   watchlist: {
     modelName: 'Watchlist',
@@ -122,6 +142,7 @@ export const Routes: Record<
       [Role.MEDIOR]: true,
       [Role.SENIOR]: true,
     },
+    schema: Schemas.watchlistSchema,
   },
 } as const;
 

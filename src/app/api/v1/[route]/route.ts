@@ -10,7 +10,6 @@ import { AuthenticationService } from '@/lib/classes/authentication-service';
 import { logger } from '@/lib/pinologger';
 import prisma from '@/lib/prisma';
 import { checkRoutePermission, getModelName, Routes } from '@/lib/routes';
-import * as Schemas from '@/lib/schemas';
 
 // Define allowed HTTP methods and their corresponding permission checks
 const METHOD_PERMISSION_MAP = {
@@ -20,31 +19,8 @@ const METHOD_PERMISSION_MAP = {
   DELETE: 'delete',
 } as const;
 
-// Mapping of routes to their Zod schemas
-const ROUTE_SCHEMA_MAP = {
-  genre: Schemas.genreSchema,
-  contentRating: Schemas.contentRatingSchema,
-  content: Schemas.contentSchema,
-  language: Schemas.languageSchema,
-  subtitle: Schemas.subtitleSchema,
-  contentMetadata: Schemas.contentMetadataSchema,
-  netflixAccount: Schemas.netflixAccountSchema,
-  previousPasswordHash: Schemas.previousPasswordHashSchema,
-  profile: Schemas.profileSchema,
-  subscriptionType: Schemas.subscriptionTypeSchema,
-  subscription: Schemas.subscriptionSchema,
-  invoice: Schemas.invoiceSchema,
-  viewingHistory: Schemas.viewingHistorySchema,
-  watchlist: Schemas.watchlistSchema,
-};
-
 // Type for Prisma model methods
-type PrismaModelMethod =
-  | 'findMany'
-  | 'findUnique'
-  | 'create'
-  | 'update'
-  | 'delete';
+type PrismaModelMethod = 'findMany' | 'create' | 'update' | 'delete';
 
 // Mapping of HTTP methods to Prisma model methods
 const METHOD_TO_PRISMA_METHOD: Record<string, PrismaModelMethod> = {
@@ -160,10 +136,9 @@ async function handleRequest(
       = method !== 'GET' && method !== 'DELETE' ? await request.json() : null;
 
     // validate the body
-    const bodySchema
-      = ROUTE_SCHEMA_MAP[routeKey as keyof typeof ROUTE_SCHEMA_MAP];
-    if (body && bodySchema) {
-      const parsedBody = bodySchema.safeParse(body);
+    const routeConfig = Routes[routeKey];
+    if (body && routeConfig.schema) {
+      const parsedBody = routeConfig.schema.safeParse(body);
       if (!parsedBody.success) {
         return ResponseFormatter.formatError(
           { message: 'Validation Failed', details: parsedBody.error.errors },
