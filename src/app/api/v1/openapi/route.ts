@@ -1,361 +1,598 @@
-import type { OpenAPIV3 } from 'openapi-types';
+import { StatusCodes } from 'http-status-codes';
+import { type NextRequest, NextResponse } from 'next/server';
 
-import { NextResponse } from 'next/server';
-import { zodToJsonSchema } from 'zod-to-json-schema';
+import { routeConfigurations } from '@/lib/routes';
 
-import { Routes } from '@/lib/routes';
+export async function GET(request: NextRequest) {
+  const baseUrl = request.nextUrl.origin;
+  const requestHeader = request.headers.get('Accept') ?? undefined;
 
-export async function GET() {
-  const openApiSpec: OpenAPIV3.Document = {
-    openapi: '3.0.0',
-    info: {
-      title: 'Netflix Clone API',
-      version: '1.0.0',
-      description: 'API documentation for Netflix Clone application',
-    },
-    servers: [
-      {
-        url: '/api/v1',
-        description: 'API V1',
-      },
-    ],
-    tags: generateTags(),
-    paths: generatePaths(),
-    components: {
-      schemas: generateSchemas(),
-    },
-  };
-
-  return NextResponse.json(openApiSpec);
-}
-
-function generateTags(): OpenAPIV3.TagObject[] {
-  return Object.entries(Routes).map(([_, config]) => ({
-    name: config.modelName,
-    description: `Operations about ${config.modelName.toLowerCase()}s`,
-  }));
-}
-
-function generatePaths(): OpenAPIV3.PathsObject {
-  const paths: OpenAPIV3.PathsObject = {};
-
-  // Simplified error response schema
-  const errorResponseSchema: OpenAPIV3.SchemaObject = {
-    type: 'object',
-    properties: {
-      error: {
-        type: 'object',
-        properties: {
-          message: {
-            type: 'string',
-            description: 'Error message',
-          },
-        },
-        required: ['message'],
-      },
-    },
-  };
-
-  // Helper function to generate content object with both JSON and XML
-  const generateContentTypes = (schema: OpenAPIV3.SchemaObject) => ({
-    'application/json': {
-      schema,
-    },
-    'application/xml': {
-      schema,
-    },
-  });
-
-  Object.entries(Routes).forEach(([route, config]) => {
-    const routePath = `/${route}`;
-    paths[routePath] = {
-      get: {
-        tags: [config.modelName],
-        summary: `Get ${config.modelName} list`,
-        parameters: [
-          {
-            name: 'page',
-            in: 'query',
-            schema: { type: 'integer', minimum: 1 },
-            description: 'Page number for pagination',
-          },
-          {
-            name: 'limit',
-            in: 'query',
-            schema: { type: 'integer', minimum: 1 },
-            description: 'Number of items per page',
-          },
-          {
-            name: 'Accept',
-            in: 'header',
-            schema: {
-              type: 'string',
-              enum: ['application/json', 'application/xml'],
-            },
-            description: 'Response format',
-          },
-        ],
-        responses: {
-          200: {
-            description: 'Successful response',
-            content: generateContentTypes({
-              type: 'object',
-              properties: {
-                data: {
-                  type: 'array',
-                  items: {
-                    $ref: `#/components/schemas/${config.modelName}`,
-                  },
-                },
-                pagination: {
-                  type: 'object',
-                  properties: {
-                    currentPage: { type: 'integer' },
-                    totalPages: { type: 'integer' },
-                    totalItems: { type: 'integer' },
-                    itemsPerPage: { type: 'integer' },
-                  },
-                },
-              },
-            }),
-          },
-          400: {
-            description: 'Bad Request',
-            content: generateContentTypes(errorResponseSchema),
-          },
-          401: {
-            description: 'Unauthorized',
-            content: generateContentTypes(errorResponseSchema),
-          },
-          403: {
-            description: 'Forbidden',
-            content: generateContentTypes(errorResponseSchema),
-          },
-          404: {
-            description: 'Not Found',
-            content: generateContentTypes(errorResponseSchema),
-          },
-          422: {
-            description: 'Unprocessable Entity',
-            content: generateContentTypes(errorResponseSchema),
-          },
-        },
-      },
-      post: {
-        tags: [config.modelName],
-        summary: `Create new ${config.modelName}`,
-        parameters: [
-          {
-            name: 'Accept',
-            in: 'header',
-            schema: {
-              type: 'string',
-              enum: ['application/json', 'application/xml'],
-            },
-            description: 'Response format',
-          },
-        ],
-        requestBody: {
-          required: true,
-          content: {
-            'application/json': {
-              schema: {
-                $ref: `#/components/schemas/${config.modelName}`,
-              },
-            },
-          },
-        },
-        responses: {
-          201: {
-            description: 'Successfully created',
-            content: generateContentTypes({
-              type: 'object',
-              allOf: [
-                {
-                  $ref: `#/components/schemas/${config.modelName}`,
-                },
-              ],
-            }),
-          },
-          400: {
-            description: 'Bad Request - Invalid input',
-            content: generateContentTypes(errorResponseSchema),
-          },
-          401: {
-            description: 'Unauthorized',
-            content: generateContentTypes(errorResponseSchema),
-          },
-          403: {
-            description: 'Forbidden - Insufficient permissions',
-            content: generateContentTypes(errorResponseSchema),
-          },
-          422: {
-            description: 'Unprocessable Entity',
-            content: generateContentTypes(errorResponseSchema),
-          },
-        },
-      },
-      put: {
-        tags: [config.modelName],
-        summary: `Update ${config.modelName}`,
-        parameters: [
-          {
-            name: 'id',
-            in: 'query',
-            required: true,
-            schema: { type: 'string' },
-            description: 'ID of the resource to update',
-          },
-        ],
-        requestBody: {
-          required: true,
-          content: {
-            'application/json': {
-              schema: {
-                $ref: `#/components/schemas/${config.modelName}`,
-              },
-            },
-          },
-        },
-        responses: {
-          200: {
-            description: 'Successfully updated',
-            content: {
-              'application/json': {
-                schema: {
-                  $ref: `#/components/schemas/${config.modelName}`,
-                },
-              },
-            },
-          },
-          400: {
-            description: 'Bad Request - Invalid input or ID',
-            content: {
-              'application/json': {
-                schema: errorResponseSchema,
-              },
-            },
-          },
-          401: {
-            description: 'Unauthorized - Invalid or missing token',
-            content: {
-              'application/json': {
-                schema: errorResponseSchema,
-              },
-            },
-          },
-          403: {
-            description: 'Forbidden - Insufficient permissions',
-            content: {
-              'application/json': {
-                schema: errorResponseSchema,
-              },
-            },
-          },
-          404: {
-            description: 'Not Found - Resource not found',
-            content: {
-              'application/json': {
-                schema: errorResponseSchema,
-              },
-            },
-          },
-          422: {
-            description: 'Unprocessable Entity - Database constraint violation',
-            content: {
-              'application/json': {
-                schema: errorResponseSchema,
-              },
-            },
-          },
-        },
-      },
-      delete: {
-        tags: [config.modelName],
-        summary: `Delete ${config.modelName}`,
-        parameters: [
-          {
-            name: 'id',
-            in: 'query',
-            required: true,
-            schema: { type: 'string' },
-            description: 'ID of the resource to delete',
-          },
-        ],
-        responses: {
-          200: {
-            description: 'Successfully deleted',
-            content: {
-              'application/json': {
-                schema: {
-                  type: 'object',
-                  properties: {
-                    message: {
-                      type: 'string',
-                      example: 'Resource successfully deleted',
+  // Common error responses for all endpoints
+  const commonErrorResponses = {
+    [StatusCodes.BAD_REQUEST]: {
+      description: 'Bad Request - Validation Error',
+      content: {
+        'application/json': {
+          schema: {
+            type: 'object',
+            properties: {
+              error: {
+                type: 'object',
+                properties: {
+                  message: { type: 'string' },
+                  details: {
+                    type: 'array',
+                    items: {
+                      type: 'object',
+                      properties: {
+                        code: { type: 'string' },
+                        message: { type: 'string' },
+                        path: {
+                          type: 'array',
+                          items: { type: 'string' },
+                        },
+                      },
                     },
                   },
                 },
               },
             },
           },
-          400: {
-            description: 'Bad Request - Invalid ID',
-            content: {
-              'application/json': {
-                schema: errorResponseSchema,
-              },
-            },
-          },
-          401: {
-            description: 'Unauthorized - Invalid or missing token',
-            content: {
-              'application/json': {
-                schema: errorResponseSchema,
-              },
-            },
-          },
-          403: {
-            description: 'Forbidden - Insufficient permissions',
-            content: {
-              'application/json': {
-                schema: errorResponseSchema,
-              },
-            },
-          },
-          404: {
-            description: 'Not Found - Resource not found',
-            content: {
-              'application/json': {
-                schema: errorResponseSchema,
-              },
-            },
-          },
-          422: {
-            description: 'Unprocessable Entity - Database constraint violation',
-            content: {
-              'application/json': {
-                schema: errorResponseSchema,
+        },
+        'application/xml': {
+          schema: {
+            type: 'object',
+            properties: {
+              error: {
+                type: 'object',
+                properties: {
+                  message: { type: 'string' },
+                  details: {
+                    type: 'array',
+                    items: {
+                      type: 'object',
+                      properties: {
+                        code: { type: 'string' },
+                        message: { type: 'string' },
+                        path: {
+                          type: 'array',
+                          items: { type: 'string' },
+                        },
+                      },
+                    },
+                  },
+                },
               },
             },
           },
         },
       },
-    };
+    },
+    [StatusCodes.UNAUTHORIZED]: {
+      description: 'Unauthorized - Authentication Required',
+      content: {
+        'application/json': {
+          schema: {
+            type: 'object',
+            properties: {
+              error: {
+                type: 'object',
+                properties: {
+                  message: {
+                    type: 'string',
+                    example: 'Authentication required',
+                  },
+                },
+              },
+            },
+          },
+        },
+        'application/xml': {
+          schema: {
+            type: 'object',
+            properties: {
+              error: {
+                type: 'object',
+                properties: {
+                  message: {
+                    type: 'string',
+                    example: 'Authentication required',
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    [StatusCodes.FORBIDDEN]: {
+      description: 'Forbidden - Insufficient Permissions',
+      content: {
+        'application/json': {
+          schema: {
+            type: 'object',
+            properties: {
+              error: {
+                type: 'object',
+                properties: {
+                  message: {
+                    type: 'string',
+                    example: 'You are not authorized to perform this action',
+                  },
+                },
+              },
+            },
+          },
+        },
+        'application/xml': {
+          schema: {
+            type: 'object',
+            properties: {
+              error: {
+                type: 'object',
+                properties: {
+                  message: {
+                    type: 'string',
+                    example: 'You are not authorized to perform this action',
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    [StatusCodes.NOT_FOUND]: {
+      description: 'Not Found',
+      content: {
+        'application/json': {
+          schema: {
+            type: 'object',
+            properties: {
+              error: {
+                type: 'object',
+                properties: {
+                  message: { type: 'string', example: 'Resource not found' },
+                },
+              },
+            },
+          },
+        },
+        'application/xml': {
+          schema: {
+            type: 'object',
+            properties: {
+              error: {
+                type: 'object',
+                properties: {
+                  message: { type: 'string', example: 'Resource not found' },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    [StatusCodes.UNPROCESSABLE_ENTITY]: {
+      description: 'Unprocessable Entity - Database Operation Failed',
+      content: {
+        'application/json': {
+          schema: {
+            type: 'object',
+            properties: {
+              error: {
+                type: 'object',
+                properties: {
+                  message: { type: 'string' },
+                },
+              },
+            },
+          },
+        },
+        'application/xml': {
+          schema: {
+            type: 'object',
+            properties: {
+              error: {
+                type: 'object',
+                properties: {
+                  message: { type: 'string' },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    [StatusCodes.INTERNAL_SERVER_ERROR]: {
+      description: 'Internal Server Error',
+      content: {
+        'application/json': {
+          schema: {
+            type: 'object',
+            properties: {
+              error: {
+                type: 'object',
+                properties: {
+                  message: { type: 'string', example: 'Internal Server Error' },
+                },
+              },
+            },
+          },
+        },
+        'application/xml': {
+          schema: {
+            type: 'object',
+            properties: {
+              error: {
+                type: 'object',
+                properties: {
+                  message: { type: 'string', example: 'Internal Server Error' },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  };
+
+  // Group routes by tags
+  const routeTags = Object.entries(routeConfigurations).reduce(
+    (acc, [key, config]) => {
+      const tag = key.charAt(0).toUpperCase() + key.slice(1);
+      if (!acc[tag]) {
+        acc[tag] = [];
+      }
+      acc[tag].push({ key, config });
+      return acc;
+    },
+    {} as Record<string, Array<{ key: string; config: any }>>,
+  );
+
+  const paths: Record<string, any> = {};
+  const schemas: Record<string, any> = {};
+
+  // Generate paths and schemas for each route
+  Object.entries(routeTags).forEach(([tag, routes]) => {
+    routes.forEach(({ key, config }) => {
+      const routePath = `/api/v1/${config.routeName}`;
+      paths[routePath] = {
+        get: {
+          tags: [tag],
+          summary: `Get ${key} list`,
+          description: `Retrieve a paginated list of ${key} items`,
+          parameters: [
+            {
+              name: 'page',
+              in: 'query',
+              schema: { type: 'integer', default: 1, minimum: 1 },
+              description: 'Page number for pagination',
+            },
+            {
+              name: 'limit',
+              in: 'query',
+              schema: {
+                type: 'integer',
+                default: 10,
+                minimum: 1,
+                maximum: 100,
+              },
+              description: 'Number of items per page',
+            },
+            {
+              name: 'Accept',
+              in: 'header',
+              schema: {
+                type: 'string',
+                default: 'application/json',
+                enum: ['application/json', 'application/xml'],
+              },
+              description:
+                'Response format (defaults to JSON if not specified)',
+            },
+          ],
+          responses: {
+            [StatusCodes.OK]: {
+              description: 'Successful response',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    required: ['data', 'pagination'],
+                    properties: {
+                      data: {
+                        type: 'array',
+                        items: {
+                          $ref: `#/components/schemas/${config.schema}`,
+                        },
+                      },
+                      pagination: {
+                        type: 'object',
+                        required: [
+                          'currentPage',
+                          'totalPages',
+                          'totalItems',
+                          'itemsPerPage',
+                        ],
+                        properties: {
+                          currentPage: { type: 'integer' },
+                          totalPages: { type: 'integer' },
+                          totalItems: { type: 'integer' },
+                          itemsPerPage: { type: 'integer' },
+                        },
+                      },
+                    },
+                  },
+                },
+                'application/xml': {
+                  schema: {
+                    type: 'object',
+                    required: ['data', 'pagination'],
+                    properties: {
+                      data: {
+                        type: 'array',
+                        items: {
+                          $ref: `#/components/schemas/${config.schema}`,
+                        },
+                      },
+                      pagination: {
+                        type: 'object',
+                        required: [
+                          'currentPage',
+                          'totalPages',
+                          'totalItems',
+                          'itemsPerPage',
+                        ],
+                        properties: {
+                          currentPage: { type: 'integer' },
+                          totalPages: { type: 'integer' },
+                          totalItems: { type: 'integer' },
+                          itemsPerPage: { type: 'integer' },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            ...commonErrorResponses,
+          },
+        },
+        post: {
+          tags: [tag],
+          summary: `Create new ${key}`,
+          description: `Create a new ${key} item`,
+          parameters: [
+            {
+              name: 'Accept',
+              in: 'header',
+              schema: { type: 'string', default: 'application/json' },
+              description: 'Accepted response format',
+            },
+          ],
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: `#/components/schemas/${config.schema}`,
+                },
+              },
+            },
+          },
+          responses: {
+            [StatusCodes.CREATED]: {
+              description: 'Successfully created',
+              content: {
+                'application/json': {
+                  schema: {
+                    $ref: `#/components/schemas/${config.schema}`,
+                  },
+                },
+                'application/xml': {
+                  schema: {
+                    $ref: `#/components/schemas/${config.schema}`,
+                  },
+                },
+              },
+            },
+            ...commonErrorResponses,
+          },
+        },
+      };
+
+      // Add individual item routes
+      paths[`${routePath}/{id}`] = {
+        parameters: [
+          {
+            name: 'id',
+            in: 'path',
+            required: true,
+            schema: { type: 'string' },
+            description: 'Resource identifier',
+          },
+        ],
+        put: {
+          tags: [tag],
+          summary: `Update ${key}`,
+          description: `Update an existing ${key} item`,
+          parameters: [
+            {
+              name: 'Accept',
+              in: 'header',
+              schema: { type: 'string', default: 'application/json' },
+              description: 'Accepted response format',
+            },
+          ],
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: `#/components/schemas/${config.schema}`,
+                },
+              },
+            },
+          },
+          responses: {
+            [StatusCodes.OK]: {
+              description: 'Successfully updated',
+              content: {
+                'application/json': {
+                  schema: {
+                    $ref: `#/components/schemas/${config.schema}`,
+                  },
+                },
+                'application/xml': {
+                  schema: {
+                    $ref: `#/components/schemas/${config.schema}`,
+                  },
+                },
+              },
+            },
+            ...commonErrorResponses,
+          },
+        },
+        delete: {
+          tags: [tag],
+          summary: `Delete ${key}`,
+          description: `Delete an existing ${key} item`,
+          parameters: [
+            {
+              name: 'Accept',
+              in: 'header',
+              schema: { type: 'string', default: 'application/json' },
+              description: 'Accepted response format',
+            },
+          ],
+          responses: {
+            [StatusCodes.OK]: {
+              description: 'Successfully deleted',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    required: ['message'],
+                    properties: {
+                      message: {
+                        type: 'string',
+                        example: 'Resource deleted successfully',
+                      },
+                    },
+                  },
+                },
+                'application/xml': {
+                  schema: {
+                    type: 'object',
+                    required: ['message'],
+                    properties: {
+                      message: {
+                        type: 'string',
+                        example: 'Resource deleted successfully',
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            ...commonErrorResponses,
+          },
+        },
+      };
+
+      // Add schema reference
+      schemas[config.schema] = {
+        type: 'object',
+        required: ['id'],
+        properties: {
+          id: { type: 'string', format: 'uuid' },
+          createdAt: { type: 'string', format: 'date-time' },
+          updatedAt: { type: 'string', format: 'date-time' },
+        },
+      };
+    });
   });
 
-  return paths;
-}
+  // Add health check endpoint
+  paths['/api/health'] = {
+    get: {
+      tags: ['Health'],
+      summary: 'API Health Check',
+      description: 'Check if the API is up and running',
+      parameters: [
+        {
+          name: 'Accept',
+          in: 'header',
+          schema: { type: 'string', default: 'application/json' },
+          description: 'Accepted response format',
+        },
+      ],
+      responses: {
+        [StatusCodes.OK]: {
+          description: 'API is healthy',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['status', 'timestamp'],
+                properties: {
+                  status: { type: 'string', example: 'healthy' },
+                  timestamp: { type: 'string', format: 'date-time' },
+                },
+              },
+            },
+            'application/xml': {
+              schema: {
+                type: 'object',
+                required: ['status', 'timestamp'],
+                properties: {
+                  status: { type: 'string', example: 'healthy' },
+                  timestamp: { type: 'string', format: 'date-time' },
+                },
+              },
+            },
+          },
+        },
+        [StatusCodes.INTERNAL_SERVER_ERROR]:
+          commonErrorResponses[StatusCodes.INTERNAL_SERVER_ERROR],
+      },
+    },
+  };
 
-function generateSchemas(): { [key: string]: OpenAPIV3.SchemaObject } {
-  const schemas: { [key: string]: OpenAPIV3.SchemaObject } = {};
+  const openApiSpec = {
+    openapi: '3.0.0',
+    info: {
+      title: 'API Documentation',
+      version: '1.0.0',
+      description:
+        'Complete API documentation with authentication, pagination, and CRUD operations',
+    },
+    servers: [
+      {
+        url: baseUrl,
+        description: 'API Server',
+      },
+    ],
+    tags: [
+      ...Object.keys(routeTags).map(tag => ({
+        name: tag,
+        description: `Operations related to ${tag}`,
+      })),
+      {
+        name: 'Health',
+        description: 'API health monitoring endpoints',
+      },
+    ],
+    paths,
+    components: {
+      schemas,
+    },
+  };
 
-  Object.entries(Routes).forEach(([_, config]) => {
-    if (config.schema) {
-      const jsonSchema = zodToJsonSchema(config.schema);
-      schemas[config.modelName] = jsonSchema as OpenAPIV3.SchemaObject;
-    }
+  return NextResponse.json(openApiSpec, {
+    headers: {
+      'Content-Type': 'application/json',
+    },
   });
-
-  return schemas;
 }
