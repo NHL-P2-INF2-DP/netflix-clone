@@ -1,3 +1,4 @@
+import { Role } from '@prisma/client';
 import { betterAuth } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
 import { bearer, jwt } from 'better-auth/plugins';
@@ -13,5 +14,16 @@ export const auth = betterAuth({
     enabled: true,
   },
 
+  user: {
+    additionalFields: {
+      role: {
+        type: 'string',
+        enum: Role,
+      },
+    },
+  },
+
   plugins: [jwt(), bearer()],
 });
+
+export type Session = typeof auth.$Infer.Session;

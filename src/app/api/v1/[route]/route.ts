@@ -1,7 +1,7 @@
+import type { Role } from '@prisma/client';
 import type { NextRequest } from 'next/server';
 
 import { StatusCodes } from 'http-status-codes';
-import { z } from 'zod';
 
 import type { RouteKey } from '@/lib/routes';
 
@@ -10,9 +10,10 @@ import { AuthenticationService } from '@/lib/classes/authentication-service';
 import { logger } from '@/lib/pinologger';
 import prisma from '@/lib/prisma';
 import { checkRoutePermission, getModelName, Routes } from '@/lib/routes';
-import * as Schemas from '@/lib/schemas';
 
-// Define allowed HTTP methods and their corresponding permission checks
+/**
+ * Mapping of HTTP methods to their corresponding permission types
+ */
 const METHOD_PERMISSION_MAP = {
   GET: 'read',
   POST: 'create',
@@ -20,33 +21,14 @@ const METHOD_PERMISSION_MAP = {
   DELETE: 'delete',
 } as const;
 
-// Mapping of routes to their Zod schemas
-const ROUTE_SCHEMA_MAP = {
-  genre: Schemas.genreSchema,
-  contentRating: Schemas.contentRatingSchema,
-  content: Schemas.contentSchema,
-  language: Schemas.languageSchema,
-  subtitle: Schemas.subtitleSchema,
-  contentMetadata: Schemas.contentMetadataSchema,
-  netflixAccount: Schemas.netflixAccountSchema,
-  previousPasswordHash: Schemas.previousPasswordHashSchema,
-  profile: Schemas.profileSchema,
-  subscriptionType: Schemas.subscriptionTypeSchema,
-  subscription: Schemas.subscriptionSchema,
-  invoice: Schemas.invoiceSchema,
-  viewingHistory: Schemas.viewingHistorySchema,
-  watchlist: Schemas.watchlistSchema,
-};
+/**
+ * Type definition for Prisma model methods
+ */
+type PrismaModelMethod = 'findMany' | 'create' | 'update' | 'delete';
 
-// Type for Prisma model methods
-type PrismaModelMethod =
-  | 'findMany'
-  | 'findUnique'
-  | 'create'
-  | 'update'
-  | 'delete';
-
-// Mapping of HTTP methods to Prisma model methods
+/**
+ * Mapping of HTTP methods to their corresponding Prisma model methods
+ */
 const METHOD_TO_PRISMA_METHOD: Record<string, PrismaModelMethod> = {
   GET: 'findMany',
   POST: 'create',
@@ -54,9 +36,33 @@ const METHOD_TO_PRISMA_METHOD: Record<string, PrismaModelMethod> = {
   DELETE: 'delete',
 };
 
-// UUID validation schema
-const UUIDSchema = z.string().uuid();
+/**
+ * Interface for pagination parameters
+ * @interface PaginationParams
+ * @property {number} [page] - The page number to retrieve
+ * @property {number} [limit] - The number of items per page
+ */
+interface PaginationParams {
+  page?: number;
+  limit?: number;
+}
 
+/**
+ * Interface for search parameters
+ * @interface SearchParams
+ * @property {string} [key] - Dynamic key-value pairs for search criteria
+ */
+interface SearchParams {
+  [key: string]: string | undefined;
+}
+
+/**
+ * Handles GET requests for the dynamic route
+ * @param request - The incoming Next.js request
+ * @param context - The context object containing route parameters
+ * @param context.params - The route parameters containing the dynamic route value
+ * @returns Promise resolving to the API response
+ */
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ route: string }> },
@@ -68,6 +74,13 @@ export async function GET(
   return response;
 }
 
+/**
+ * Handles POST requests for the dynamic route
+ * @param request - The incoming Next.js request
+ * @param params - The context object containing route parameters
+ * @param params.params - The route parameters containing the dynamic route value
+ * @returns Promise resolving to the API response
+ */
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ route: string }> },
@@ -79,6 +92,13 @@ export async function POST(
   return response;
 }
 
+/**
+ * Handles PUT requests for the dynamic route by validating authentication, permissions, and processing the request
+ * @param request - The incoming Next.js request
+ * @param context - The context object containing route parameters
+ * @param context.params - The route parameters containing the dynamic route value
+ * @returns Promise resolving to the API response
+ */
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ route: string }> },
@@ -90,6 +110,14 @@ export async function PUT(
   return response;
 }
 
+/**
+ * Handles all API requests by validating authentication, permissions, and processing the request
+ * @param request - The incoming Next.js request
+ * @param context - The context object containing route parameters
+ * @param context.params - The route parameters containing the dynamic route value
+ * @returns Promise resolving to the formatted API response
+ * @throws Will throw an error if request processing fails
+ */
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ route: string }> },
@@ -102,13 +130,14 @@ export async function DELETE(
 }
 
 /**
- * Handle a request to the API.
- * @param request The request to handle
- * @param context The request context
- * @param method The HTTP method used for the request
- * @returns A response to the request
+ * Handles all API requests by validating authentication, permissions, and processing the request
+ * @param request - The incoming Next.js request
+ * @param context - The context object containing route parameters
+ * @param context.params - The route parameters containing the dynamic route value
+ * @param method - The HTTP method of the request
+ * @returns Promise resolving to the formatted API response
+ * @throws Will throw an error if request processing fails
  */
-
 async function handleRequest(
   request: NextRequest,
   { params }: { params: Promise<{ route: string }> },
@@ -139,9 +168,9 @@ async function handleRequest(
 
     const permissionType
       = METHOD_PERMISSION_MAP[method as keyof typeof METHOD_PERMISSION_MAP];
-    if (!checkRoutePermission(routeKey, permissionType)) {
+    if (!checkRoutePermission(routeKey, auth.user.role as Role)) {
       return ResponseFormatter.formatError(
-        { message: 'Permission denied' },
+        { message: 'You are not authorized to perform this action' },
         requestHeader,
         StatusCodes.FORBIDDEN,
       );
@@ -152,37 +181,55 @@ async function handleRequest(
     const body
       = method !== 'GET' && method !== 'DELETE' ? await request.json() : null;
 
-    if (body && ROUTE_SCHEMA_MAP[routeKey]) {
-      try {
-        ROUTE_SCHEMA_MAP[routeKey].parse(body);
-      }
-      catch (validationError) {
-        if (validationError instanceof z.ZodError) {
-          return ResponseFormatter.formatError(
-            { message: 'Validation Failed', details: validationError.errors },
-            requestHeader,
-            StatusCodes.BAD_REQUEST,
-          );
-        }
-      }
-    }
-
-    const url = new URL(request.url);
-    const pathParts = url.pathname.split('/');
-    const id
-      = pathParts[pathParts.length - 1] !== route
-        ? pathParts[pathParts.length - 1]
-        : undefined;
-
-    if (id) {
-      const uuidValidation = UUIDSchema.safeParse(id);
-      if (!uuidValidation.success) {
+    // validate the body
+    const routeConfig = Routes[routeKey];
+    if (body && routeConfig.schema) {
+      const parsedBody = routeConfig.schema.safeParse(body);
+      if (!parsedBody.success) {
         return ResponseFormatter.formatError(
-          { message: 'Invalid UUID format' },
+          { message: 'Validation Failed', details: parsedBody.error.errors },
           requestHeader,
           StatusCodes.BAD_REQUEST,
         );
       }
+    }
+
+    const url = new URL(request.url);
+
+    // Extract pagination and search parameters from URL
+    const searchParams = Object.fromEntries(url.searchParams.entries());
+
+    // Parse pagination parameters
+    const pagination: PaginationParams = {
+      page: searchParams.page ? Number.parseInt(searchParams.page, 10) : 1,
+      limit: searchParams.limit ? Number.parseInt(searchParams.limit, 10) : 10,
+    };
+
+    // Remove pagination params from search params
+    delete searchParams.page;
+    delete searchParams.limit;
+
+    // Validate pagination parameters
+    if (
+      pagination.page
+      && (Number.isNaN(pagination.page) || pagination.page < 1)
+    ) {
+      return ResponseFormatter.formatError(
+        { message: 'Invalid page number' },
+        requestHeader,
+        StatusCodes.BAD_REQUEST,
+      );
+    }
+
+    if (
+      pagination.limit
+      && (Number.isNaN(pagination.limit) || pagination.limit < 1)
+    ) {
+      return ResponseFormatter.formatError(
+        { message: 'Invalid limit number' },
+        requestHeader,
+        StatusCodes.BAD_REQUEST,
+      );
     }
 
     let result;
@@ -190,21 +237,54 @@ async function handleRequest(
     type PrismaModel = keyof typeof prisma;
 
     switch (prismaMethod) {
-      case 'findMany':
-        result = await (prisma[modelName as PrismaModel] as any).findMany();
-        break;
-      case 'findUnique':
-        if (!id) {
-          return ResponseFormatter.formatError(
-            { message: 'ID is required for findUnique' },
-            requestHeader,
-            StatusCodes.BAD_REQUEST,
-          );
-        }
-        result = await (prisma[modelName as PrismaModel] as any).findUnique({
-          where: { id },
+      case 'findMany': {
+        // Build the where clause for searching
+        const where: any = {};
+
+        // Process search parameters
+        Object.entries(searchParams).forEach(([key, value]) => {
+          if (value) {
+            where[key] = {
+              contains: value,
+              mode: 'insensitive', // Case-insensitive search
+            };
+          }
         });
-        break;
+
+        // Get total count for pagination
+        const totalCount = await (
+          prisma[modelName as PrismaModel] as any
+        ).count({
+          where,
+        });
+
+        // Calculate pagination values
+        const skip = (pagination.page! - 1) * pagination.limit!;
+        const totalPages = Math.ceil(totalCount / pagination.limit!);
+
+        // Execute the query with pagination and search
+        result = await (prisma[modelName as PrismaModel] as any).findMany({
+          where,
+          skip,
+          take: pagination.limit,
+        });
+
+        // Return paginated response, even if empty
+        return ResponseFormatter.formatResponse(
+          {
+            result,
+            pagination: {
+              currentPage: pagination.page,
+              totalPages: Math.ceil(totalCount / pagination.limit!),
+              totalItems: totalCount,
+              itemsPerPage: pagination.limit,
+            },
+          },
+          requestHeader,
+          StatusCodes.OK,
+        );
+      }
+
       case 'create':
         result = await (prisma[modelName as PrismaModel] as any).create({
           data: { ...body, createdAt: new Date(), updatedAt: new Date() },
@@ -212,7 +292,7 @@ async function handleRequest(
         statusCode = StatusCodes.CREATED; // Return 201 for creation
         break;
       case 'update':
-        if (!id) {
+        if (!searchParams.id) {
           return ResponseFormatter.formatError(
             { message: 'ID is required for update' },
             requestHeader,
@@ -220,12 +300,12 @@ async function handleRequest(
           );
         }
         result = await (prisma[modelName as PrismaModel] as any).update({
-          where: { id },
+          where: { id: searchParams.id },
           data: { ...body, updatedAt: new Date() },
         });
         break;
       case 'delete':
-        if (!id) {
+        if (!searchParams.id) {
           return ResponseFormatter.formatError(
             { message: 'ID is required for delete' },
             requestHeader,
@@ -233,7 +313,7 @@ async function handleRequest(
           );
         }
         result = await (prisma[modelName as PrismaModel] as any).delete({
-          where: { id },
+          where: { id: searchParams.id },
         });
         break;
       default:
