@@ -6,6 +6,9 @@ import { StatusCodes } from 'http-status-codes';
 
 import type { HttpMethod } from '@/app/api/v1/[route]/route';
 
+import type { Session } from '../auth';
+import type { RouteConfig } from './route-manager';
+
 import { logger } from '../pinologger';
 import prisma from '../prisma';
 import { routeConfigurations } from '../routes';
@@ -20,8 +23,8 @@ interface PaginationParams {
 
 interface ValidationResult {
   error?: Response;
-  routeConfig?: any;
-  auth?: any;
+  routeConfig?: RouteConfig;
+  auth?: Session;
   modelKey?: string;
 }
 
@@ -207,7 +210,7 @@ export class ApiRouteHandler {
       }
 
       const { routeConfig } = validation;
-      const modelName = routeConfig.schema.replace('Schema', '');
+      const modelName = routeConfig?.schema.replace('Schema', '');
       const url = new URL(this.request.url);
       const searchParams = Object.fromEntries(url.searchParams.entries());
 
@@ -221,7 +224,7 @@ export class ApiRouteHandler {
       if (this.method === 'GET') {
         if (this.id) {
           const result = await this.executeOperation(
-            modelName,
+            modelName as string,
             searchParams,
             this.id,
           );
@@ -240,7 +243,7 @@ export class ApiRouteHandler {
         }
         else {
           const result = await this.handlePaginatedQuery(
-            modelName,
+            modelName as string,
             searchParams,
             pagination,
           );
@@ -257,7 +260,7 @@ export class ApiRouteHandler {
         body = await this.request.json();
         const schemas = await import('@/prisma/generated/zod');
         const schema = schemas[
-          routeConfig.schema as keyof typeof schemas
+          routeConfig?.schema as keyof typeof schemas
         ] as z.ZodObject<any>;
 
         const validationSchema = schema.omit({ id: true });
@@ -274,7 +277,11 @@ export class ApiRouteHandler {
         body = parsedBody.data;
       }
 
-      const result = await this.executeOperation(modelName, searchParams, body);
+      const result = await this.executeOperation(
+        modelName as string,
+        searchParams,
+        body,
+      );
       return ResponseFormatter.formatResponse(
         result,
         this.requestHeader,
