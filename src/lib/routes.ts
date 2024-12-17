@@ -43,6 +43,21 @@ const MEDIOR_AND_SENIOR = {
   [Role.SENIOR]: FULL_ACCESS,
 } as const;
 
+// Add RouteConfig export
+export interface RouteConfig {
+  routeName: string;
+  permissions: Record<
+    Role,
+    {
+      read: boolean;
+      create: boolean;
+      update: boolean;
+      delete: boolean;
+    }
+  >;
+  tags?: string[];
+}
+
 export const routeConfigurations: RouteConfigInputType = {
   // Content-related routes - full access for all roles
   Genre: { routeName: 'genre', permissions: ALL_ROLES_FULL_ACCESS },
