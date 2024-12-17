@@ -2,12 +2,17 @@ import type { NextRequest } from 'next/server';
 
 import { StatusCodes } from 'http-status-codes';
 
-import { ResponseFormatter } from '@/lib/classes/api-responses';
+import { ResponseFormatter } from '@/lib/classes/reponse-formatter';
 
-export function GET(request: NextRequest) {
+export async function GET(request: NextRequest) {
+  const requestHeader = request.headers.get('Accept') ?? undefined;
+
   return ResponseFormatter.formatResponse(
-    { message: 'OK' },
-    request.headers.get('Accept') || 'application/json',
+    {
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+    },
+    requestHeader,
     StatusCodes.OK,
   );
 }
