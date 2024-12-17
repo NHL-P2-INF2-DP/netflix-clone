@@ -333,7 +333,22 @@ async function generateOpenAPISpec(): Promise<OpenAPIObject> {
         required: true,
         content: {
           'application/json': {
-            schema: { $ref: `#/components/schemas/${modelName}` },
+            schema: {
+              type: 'object',
+              properties: {
+                ...Object.fromEntries(
+                  Object.entries(
+                    spec.components!.schemas![modelName].properties,
+                  ).filter(
+                    ([key]) => !['id', 'createdAt', 'updatedAt'].includes(key),
+                  ),
+                ),
+              },
+              required: spec.components!.schemas![modelName].required?.filter(
+                (field: string) =>
+                  !['id', 'createdAt', 'updatedAt'].includes(field),
+              ),
+            },
           },
         },
       },
@@ -409,7 +424,23 @@ async function generateOpenAPISpec(): Promise<OpenAPIObject> {
           required: true,
           content: {
             'application/json': {
-              schema: { $ref: `#/components/schemas/${modelName}` },
+              schema: {
+                type: 'object',
+                properties: {
+                  ...Object.fromEntries(
+                    Object.entries(
+                      spec.components!.schemas![modelName].properties,
+                    ).filter(
+                      ([key]) =>
+                        !['id', 'createdAt', 'updatedAt'].includes(key),
+                    ),
+                  ),
+                },
+                required: spec.components!.schemas![modelName].required?.filter(
+                  (field: string) =>
+                    !['id', 'createdAt', 'updatedAt'].includes(field),
+                ),
+              },
             },
           },
         },
