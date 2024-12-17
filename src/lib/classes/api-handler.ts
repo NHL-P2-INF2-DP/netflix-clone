@@ -33,13 +33,20 @@ export class ApiRouteHandler {
   private readonly method: HttpMethod;
   private readonly routeController: RouteController;
   private readonly requestHeader: string | undefined;
+  private readonly id?: string;
 
-  constructor(request: NextRequest, route: string, method: HttpMethod) {
+  constructor(
+    request: NextRequest,
+    route: string,
+    method: HttpMethod,
+    id?: string,
+  ) {
     this.request = request;
     this.route = route;
     this.method = method;
     this.routeController = new RouteController(routeConfigurations);
     this.requestHeader = request.headers.get('Accept') ?? undefined;
+    this.id = id;
   }
 
   private async validateRequest(): Promise<ValidationResult> {
@@ -149,24 +156,20 @@ export class ApiRouteHandler {
     switch (this.method) {
       case 'POST':
         return model.create({
-          data: {
-            ...(body as Record<string, unknown>),
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          },
+          data: body as Record<string, unknown>,
         });
       case 'PUT':
-        if (!searchParams.id)
+        if (!this.id)
           throw new Error('ID is required for update');
         return model.update({
-          where: { id: searchParams.id },
-          data: { ...(body as Record<string, unknown>), updatedAt: new Date() },
+          where: { id: this.id },
+          data: body as Record<string, unknown>,
         });
       case 'DELETE':
-        if (!searchParams.id)
+        if (!this.id)
           throw new Error('ID is required for delete');
         return model.delete({
-          where: { id: searchParams.id },
+          where: { id: this.id },
         });
       default:
         throw new Error('Unsupported method');
@@ -230,8 +233,11 @@ export class ApiRouteHandler {
         const schemas = await import('@/prisma/generated/zod');
         const schema = schemas[
           routeConfig.schema as keyof typeof schemas
-        ] as z.ZodSchema;
-        const parsedBody = schema.safeParse(body);
+        ] as z.ZodObject<any>;
+
+        const validationSchema = schema.omit({ id: true });
+
+        const parsedBody = validationSchema.safeParse(body);
 
         if (!parsedBody.success) {
           return ResponseFormatter.formatError(
