@@ -96,4 +96,5 @@ export const routeConfigurations: RouteConfigInputType = {
     permissions: SENIOR_ONLY,
   },
   Invoice: { routeName: 'invoice', permissions: SENIOR_ONLY },
+  User: { routeName: 'user', permissions: SENIOR_ONLY },
 } as const;
