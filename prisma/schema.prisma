@@ -13,6 +13,10 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+generator zod {
+  provider = "zod-prisma-types"
+}
+
 enum ContentType {
   MOVIE
   SERIES
@@ -147,7 +151,7 @@ model Profile {
 model SubscriptionType {
   id               String         @id @default(uuid())
   type             String         @unique
-  priceInEuroCents Int            @map("price_in_euro_cents")
+  priceInEuroCents Int           @map("price_in_euro_cents") @default(0)
   Subscription     Subscription[]
 }
 
