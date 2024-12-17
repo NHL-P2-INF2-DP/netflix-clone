@@ -6,9 +6,7 @@
     "lib": ["dom", "dom.iterable", "esnext"],
     "module": "esnext",
     "moduleResolution": "bundler",
-    "paths": {
-      "@/*": ["./src/*"]
-    },
+    "paths": { "@/*": ["./src/*"], "@/prisma/*": ["./prisma/*"] },
     "resolveJsonModule": true,
     "allowJs": true,
     "strict": true,
