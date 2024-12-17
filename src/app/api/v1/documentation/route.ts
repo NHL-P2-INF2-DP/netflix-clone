@@ -4,23 +4,7 @@ const config = {
   spec: {
     url: '/api/v1/openapi',
   },
-  config: {
-    parameters: {
-      global: [
-        {
-          name: 'extend',
-          in: 'query',
-          description:
-            'Comma-separated list of relations to include in the response',
-          required: false,
-          schema: {
-            type: 'string',
-            example: 'relation1,relation2',
-          },
-        },
-      ],
-    },
-  },
+  config: {},
   hiddenClients: [
     'libcurl',
     'clj_http',
