@@ -1,4 +1,3 @@
-// This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 // Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
@@ -20,6 +19,12 @@ enum ContentType {
   DOCUMENTARY
 }
 
+enum Role {
+  JUNIOR
+  MEDIOR
+  SENIOR
+}
+
 enum AgeRating {
   G
   PG
@@ -35,24 +40,24 @@ enum PaymentStatus {
 }
 
 model Genre {
-  id              BigInt            @id @default(autoincrement())
+  id              String            @id @default(uuid())
   name            String            @unique
   ContentMetadata ContentMetadata[]
 }
 
 model ContentRating {
-  id              BigInt            @id @default(autoincrement())
+  id              String            @id @default(uuid())
   ratingType      String            @unique @map("rating_type")
   ContentMetadata ContentMetadata[]
 }
 
 model Content {
-  id              BigInt            @id @default(autoincrement())
+  id              String            @id @default(uuid())
   title           String
   duration        DateTime
   releaseDate     DateTime          @map("release_date")
   season          Int?
-  qualityId       BigInt?           @map("quality_id")
+  qualityId       String?           @map("quality_id")
   createdAt       DateTime          @default(now()) @map("created_at")
   updatedAt       DateTime          @updatedAt @map("updated_at")
   ContentMetadata ContentMetadata[]
@@ -61,30 +66,30 @@ model Content {
 }
 
 model Language {
-  id              BigInt            @id @default(autoincrement())
+  id              String            @id @default(uuid())
   language        String            @unique
   Subtitle        Subtitle[]
   ContentMetadata ContentMetadata[]
 }
 
 model Subtitle {
-  id              BigInt            @id @default(autoincrement())
-  languageId      BigInt            @map("language_id")
+  id              String            @id @default(uuid())
+  languageId      String            @map("language_id")
   content         String
   language        Language          @relation(fields: [languageId], references: [id], onDelete: Cascade)
   ContentMetadata ContentMetadata[]
 }
 
 model ContentMetadata {
-  id              BigInt      @id @default(autoincrement())
-  title           BigInt?
-  genreId         BigInt?     @map("genre_id")
+  id              String      @id @default(uuid())
+  title           String?
+  genreId         String?     @map("genre_id")
   rating          Int?        @db.Integer
-  contentId       BigInt      @map("content_id")
-  languageId      BigInt?     @map("language_id")
-  subtitleId      BigInt?     @map("subtitle_id")
+  contentId       String      @map("content_id")
+  languageId      String?     @map("language_id")
+  subtitleId      String?     @map("subtitle_id")
   contentType     ContentType @map("content_type")
-  contentRatingId BigInt?     @map("content_rating_id")
+  contentRatingId String?     @map("content_rating_id")
   ageRating       AgeRating   @map("age_rating")
   createdAt       DateTime    @default(now()) @map("created_at")
   updatedAt       DateTime    @updatedAt @map("updated_at")
@@ -100,7 +105,7 @@ model ContentMetadata {
 }
 
 model NetflixAccount {
-  id                    BigInt                 @id @default(autoincrement())
+  id                    String                 @id @default(uuid())
   email                 String                 @unique
   password              String
   activated             Boolean                @default(false)
@@ -114,8 +119,8 @@ model NetflixAccount {
 }
 
 model PreviousPasswordHash {
-  id           BigInt         @id @default(autoincrement())
-  accountId    BigInt         @map("account_id")
+  id           String         @id @default(uuid())
+  accountId    String         @map("account_id")
   passwordHash String         @map("password_hash")
   createdAt    DateTime       @default(now()) @map("created_at")
   account      NetflixAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
@@ -124,12 +129,12 @@ model PreviousPasswordHash {
 }
 
 model Profile {
-  id             BigInt           @id @default(autoincrement())
-  accountId      BigInt           @map("account_id")
+  id             String           @id @default(uuid())
+  accountId      String           @map("account_id")
   name           String
-  profileImage   BigInt?          @map("profile_image")
+  profileImage   String?          @map("profile_image")
   dateOfBirth    DateTime         @map("date_of_birth")
-  language       String
+  language       String           @default("en")
   createdAt      DateTime         @default(now()) @map("created_at")
   updatedAt      DateTime         @updatedAt @map("updated_at")
   account        NetflixAccount   @relation(fields: [accountId], references: [id], onDelete: Cascade)
@@ -140,19 +145,19 @@ model Profile {
 }
 
 model SubscriptionType {
-  id               BigInt         @id @default(autoincrement())
+  id               String         @id @default(uuid())
   type             String         @unique
   priceInEuroCents Int            @map("price_in_euro_cents")
   Subscription     Subscription[]
 }
 
 model Subscription {
-  id                 BigInt   @id @default(autoincrement())
+  id                 String   @id @default(uuid())
   beginDate          DateTime @map("begin_date") @db.Date
   endDate            DateTime @map("end_date") @db.Date
-  accountId          BigInt   @map("account_id")
-  subscriptionTypeId BigInt   @map("subscription_type_id")
-  referralId         BigInt?  @map("referral_id")
+  accountId          String   @map("account_id")
+  subscriptionTypeId String   @map("subscription_type_id")
+  referralId         String?  @map("referral_id")
   createdAt          DateTime @default(now()) @map("created_at")
   updatedAt          DateTime @updatedAt @map("updated_at")
 
@@ -165,8 +170,8 @@ model Subscription {
 }
 
 model Invoice {
-  id             BigInt        @id @default(autoincrement())
-  subscriptionId BigInt        @map("subscription_id")
+  id             String        @id @default(uuid())
+  subscriptionId String        @map("subscription_id")
   isPaid         PaymentStatus @default(PENDING) @map("is_paid")
   createdAt      DateTime      @default(now()) @map("created_at")
   updatedAt      DateTime      @updatedAt @map("updated_at")
@@ -174,24 +179,30 @@ model Invoice {
 }
 
 model ViewingHistory {
-  id                 BigInt   @id @default(autoincrement())
-  profileId          BigInt   @map("profile_id")
-  contentId          BigInt   @map("content_id")
+  id                 String   @id @default(uuid())
+  profileId          String   @map("profile_id")
+  contentId          String   @map("content_id")
   watchDate          DateTime @default(now()) @map("watch_date")
   progressPercentage Float    @map("progress_percentage")
   profile            Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
   content            Content  @relation(fields: [contentId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@index([profileId])
   @@index([contentId])
 }
 
 model Watchlist {
-  id        BigInt  @id @default(autoincrement())
-  profileId BigInt  @map("profile_id")
-  contentId BigInt  @map("content_id")
-  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  content   Content @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  id        String   @id @default(uuid())
+  profileId String   @map("profile_id")
+  contentId String   @map("content_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  content Content @relation(fields: [contentId], references: [id], onDelete: Cascade)
 
   @@unique([profileId, contentId])
   @@index([profileId])
@@ -205,6 +216,7 @@ model User {
   name          String
   email         String
   emailVerified Boolean
+  role          Role      @default(JUNIOR)
   image         String?
   createdAt     DateTime
   updatedAt     DateTime

@@ -1,34 +1,39 @@
 /* eslint-disable node/no-process-env */
-import { config } from 'dotenv';
-import { expand } from 'dotenv-expand';
-import path from 'node:path';
 import { z } from 'zod';
 
-expand(
-  config({
-    path: path.resolve(
-      process.cwd(),
-      process.env.NODE_ENV === 'test' ? '.env.test' : '.env',
-    ),
-  }),
-);
-
+// Server-side only schema
 const envSchema = z.object({
-  // add new environment variables here, this will allow you to access them in your app in a type-safe manner
   NODE_ENV: z.string().default('development'),
   PORT: z.coerce.number().default(3000),
-  JWT_SECRET: z.string().min(32),
   DATABASE_URL: z.string(),
-  BETTER_AUTH_SECRET: z.string().min(32),
-  BETTER_AUTH_URL: z.string().url(),
+  BETTER_AUTH_SECRET: z.string(),
+  BETTER_AUTH_URL: z.string(),
 });
 
-const { error, data: parsedEnv } = envSchema.safeParse(process.env);
+// Type for our env
+type EnvType = z.infer<typeof envSchema>;
 
-if (error) {
-  console.error('❌ Invalid env:');
-  console.error(JSON.stringify(error.flatten().fieldErrors, null, 2));
-  process.exit(1);
+// Create a safe server-side only env object
+function serverEnv(): EnvType {
+  const parsed = envSchema.safeParse(process.env);
+
+  if (!parsed.success) {
+    console.error(JSON.stringify(parsed.error.flatten().fieldErrors, null, 2));
+    console.error('❌ Invalid env:');
+    process.exit(1);
+  }
+
+  return parsed.data;
 }
 
-export const env = parsedEnv!;
+// Export a safe env object that works in both client and server
+export const env
+  = typeof window === 'undefined'
+    ? serverEnv()
+    : {
+        NODE_ENV: 'development',
+        PORT: 3000,
+        DATABASE_URL: '',
+        BETTER_AUTH_SECRET: '',
+        BETTER_AUTH_URL: '',
+      };

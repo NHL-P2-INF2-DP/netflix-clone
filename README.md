@@ -31,6 +31,7 @@ To learn more about Next.js, take a look at the following resources:
 - [ShadCN](https://shadcn.com/) - UI components
 - [better-auth](https://better-auth.com/) - Authentication
 - [prisma](https://prisma.io/) - Database ORM
+- [pino](https://github.com/pinojs/pino) - Logging
 
 ## 🚧 Commit Message Guidelines
 

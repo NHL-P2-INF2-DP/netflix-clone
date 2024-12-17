@@ -1,40 +1,42 @@
-import antfu from '@antfu/eslint-config';
-import pluginQuery from '@tanstack/eslint-plugin-query';
+import antfu from "@antfu/eslint-config";
+import nextPlugin from "@next/eslint-plugin-next";
+import pluginQuery from "@tanstack/eslint-plugin-query";
 
 export default antfu(
   {
-    type: 'app',
+    type: "app",
     typescript: true,
     formatters: true,
     stylistic: {
       indent: 2,
       semi: true,
-      quotes: 'single',
+      quotes: "single",
     },
     plugins: {
-      '@tanstack/query': pluginQuery,
+      "@tanstack/query": pluginQuery,
+      "@next/next": nextPlugin,
     },
-    extends: ['next/core-web-vitals', 'next/typescript'],
+    extends: ["next/core-web-vitals", "next/typescript"],
   },
   {
     rules: {
-      'no-console': ['warn'],
-      '@tanstack/query/exhaustive-deps': ['error'],
-      'antfu/no-top-level-await': ['off'],
-      'node/prefer-global/process': ['off'],
-      'node/no-process-env': ['error'],
-      'unused-imports/no-unused-vars': ['off'],
-      'perfectionist/sort-imports': [
-        'error',
+      "no-console": ["warn"],
+      "@tanstack/query/exhaustive-deps": ["error"],
+      "antfu/no-top-level-await": ["off"],
+      "node/prefer-global/process": ["off"],
+      "node/no-process-env": ["error"],
+      "unused-imports/no-unused-vars": ["off"],
+      "perfectionist/sort-imports": [
+        "error",
         {
-          internalPattern: ['@/**'],
+          internalPattern: ["@/**"],
         },
       ],
-      'unicorn/filename-case': [
-        'error',
+      "unicorn/filename-case": [
+        "error",
         {
-          case: 'kebabCase',
-          ignore: ['README.md', '.*classes.*'],
+          case: "kebabCase",
+          ignore: ["README.md", ".*classes.*"],
         },
       ],
     },

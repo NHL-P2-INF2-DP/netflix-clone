@@ -22,7 +22,7 @@ erDiagram
     Subscription ||--o{ Invoice : generates
 
     Account {
-        BigInt id PK
+        String id PK
         String email
         String password
         Boolean activated
@@ -32,7 +32,7 @@ erDiagram
     }
 
     Profile {
-        BigInt id PK
+        String id PK
         BigInt accountId FK
         String name
         BigInt profileImage
@@ -43,7 +43,7 @@ erDiagram
     }
 
     Content {
-        BigInt id PK
+        String id PK
         String title
         DateTime duration
         DateTime releaseDate
@@ -54,7 +54,7 @@ erDiagram
     }
 
     ContentMetadata {
-        BigInt id PK
+        String id PK
         BigInt contentId FK
         BigInt genreId FK
         BigInt languageId FK
@@ -68,28 +68,28 @@ erDiagram
     }
 
     Genre {
-        BigInt id PK
+        String id PK
         String name
     }
 
     Language {
-        BigInt id PK
+        String id PK
         String language
     }
 
     Subtitle {
-        BigInt id PK
+        String id PK
         BigInt languageId FK
         String content
     }
 
     ContentRating {
-        BigInt id PK
+        String id PK
         String ratingType
     }
 
     Subscription {
-        BigInt id PK
+        String id PK
         BigInt accountId FK
         BigInt subscriptionTypeId FK
         BigInt referralId FK
@@ -100,13 +100,13 @@ erDiagram
     }
 
     SubscriptionType {
-        BigInt id PK
+        String id PK
         String type
         Int priceInEuroCents
     }
 
     Invoice {
-        BigInt id PK
+        String id PK
         BigInt subscriptionId FK
         PaymentStatus isPaid
         DateTime createdAt
@@ -114,7 +114,7 @@ erDiagram
     }
 
     ViewingHistory {
-        BigInt id PK
+        String id PK
         BigInt profileId FK
         BigInt contentId FK
         DateTime watchDate
@@ -122,13 +122,13 @@ erDiagram
     }
 
     Watchlist {
-        BigInt id PK
+        String id PK
         BigInt profileId FK
         BigInt contentId FK
     }
 
     PreviousPasswordHash {
-        BigInt id PK
+        String id PK
         BigInt accountId FK
         String passwordHash
         DateTime createdAt
