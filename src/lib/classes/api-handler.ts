@@ -154,6 +154,10 @@ export class ApiRouteHandler {
     const model = prisma[modelName as keyof typeof prisma] as any;
 
     switch (this.method) {
+      case 'GET':
+        return model.findUnique({
+          where: { id: this.id },
+        });
       case 'POST':
         return model.create({
           data: body as Record<string, unknown>,
@@ -215,16 +219,37 @@ export class ApiRouteHandler {
       delete searchParams.limit;
 
       if (this.method === 'GET') {
-        const result = await this.handlePaginatedQuery(
-          modelName,
-          searchParams,
-          pagination,
-        );
-        return ResponseFormatter.formatResponse(
-          result,
-          this.requestHeader,
-          StatusCodes.OK,
-        );
+        if (this.id) {
+          const result = await this.executeOperation(
+            modelName,
+            searchParams,
+            this.id,
+          );
+          if (result === null) {
+            return ResponseFormatter.formatError(
+              { message: 'Resource not found' },
+              this.requestHeader,
+              StatusCodes.NOT_FOUND,
+            );
+          }
+          return ResponseFormatter.formatResponse(
+            result,
+            this.requestHeader,
+            StatusCodes.OK,
+          );
+        }
+        else {
+          const result = await this.handlePaginatedQuery(
+            modelName,
+            searchParams,
+            pagination,
+          );
+          return ResponseFormatter.formatResponse(
+            result,
+            this.requestHeader,
+            StatusCodes.OK,
+          );
+        }
       }
 
       let body = null;
