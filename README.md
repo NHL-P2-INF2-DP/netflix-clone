@@ -16,6 +16,8 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+Open [http://localhost:3000/api/v1/documentation](http://localhost:3000/api/v1/documentation) with your browser to see the full documentation for all the routes. (build on top of the OpenAPI specification)
+
 ## 🤔 Learn More
 
 To learn more about Next.js, take a look at the following resources:
@@ -32,6 +34,7 @@ To learn more about Next.js, take a look at the following resources:
 - [better-auth](https://better-auth.com/) - Authentication
 - [prisma](https://prisma.io/) - Database ORM
 - [pino](https://github.com/pinojs/pino) - Logging
+- [scalar](https://scalar.com/) - Documentation
 
 ## 🚧 Commit Message Guidelines
 

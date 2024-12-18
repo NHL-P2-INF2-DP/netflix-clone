@@ -1,8 +1,8 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  output: "standalone",
-  serverExternalPackages: ["pino", "pino-pretty"],
+  output: 'standalone',
+  serverExternalPackages: ['pino', 'pino-pretty'],
   experimental: {
     // typedRoutes: true,
   },

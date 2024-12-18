@@ -1,210 +1,423 @@
-import type { OpenAPIV3 } from 'openapi-types';
+import type { NextRequest } from 'next/server';
 
+import { StatusCodes } from 'http-status-codes';
 import { NextResponse } from 'next/server';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 
-import { Routes } from '@/lib/routes';
+import { ResponseFormatter } from '@/lib/classes/reponse-formatter';
+import { RouteController } from '@/lib/classes/route-manager';
+import { routeConfigurations } from '@/lib/routes';
 
-export async function GET() {
-  const openApiSpec: OpenAPIV3.Document = {
+// Define OpenAPI types since the module doesn't export them
+interface OpenAPIObject {
+  openapi: string;
+  info: {
+    title: string;
+    version: string;
+    description?: string;
+    contact?: {
+      name?: string;
+      email?: string;
+    };
+    license?: {
+      name: string;
+      url?: string;
+    };
+  };
+  servers?: Array<{
+    url: string;
+    description?: string;
+  }>;
+  tags?: Array<{
+    name: string;
+    description?: string;
+  }>;
+  paths: Record<string, any>;
+  components?: {
+    schemas?: Record<string, any>;
+    responses?: Record<string, any>;
+  };
+}
+
+// Add missing error types
+interface OpenAPIError {
+  message: string;
+  details?: Array<{
+    code: string;
+    message: string;
+    path: string[];
+  }>;
+}
+
+const routeController = new RouteController(routeConfigurations);
+
+async function generateOpenAPISpec(): Promise<OpenAPIObject> {
+  // Import all Zod schemas
+  const schemas = await import('@/prisma/generated/zod');
+
+  const spec: OpenAPIObject = {
     openapi: '3.0.0',
     info: {
       title: 'Netflix Clone API',
       version: '1.0.0',
-      description: 'API documentation for Netflix Clone application',
+      description:
+        'API documentation for the Netflix Clone build by the students of NHL Stenden University of Applied Sciences in Emmen, The Netherlands',
+      contact: {
+        name: 'API Support',
+        email: 'support@example.com',
+      },
+      license: {
+        name: 'MIT',
+        url: 'https://opensource.org/licenses/MIT',
+      },
     },
     servers: [
       {
         url: '/api/v1',
-        description: 'API V1',
+        description: 'API v1',
       },
     ],
-    tags: generateTags(),
-    paths: generatePaths(),
-    components: {
-      schemas: generateSchemas(),
-    },
-  };
-
-  return NextResponse.json(openApiSpec);
-}
-
-function generateTags(): OpenAPIV3.TagObject[] {
-  return Object.entries(Routes).map(([_, config]) => ({
-    name: config.modelName,
-    description: `Operations about ${config.modelName.toLowerCase()}s`,
-  }));
-}
-
-function generatePaths(): OpenAPIV3.PathsObject {
-  const paths: OpenAPIV3.PathsObject = {};
-
-  // Simplified error response schema
-  const errorResponseSchema: OpenAPIV3.SchemaObject = {
-    type: 'object',
-    properties: {
-      error: {
-        type: 'object',
-        properties: {
-          message: {
-            type: 'string',
-            description: 'Error message',
+    tags: [
+      ...Object.entries(routeConfigurations)
+        .filter(([modelName]) => modelName !== 'Models')
+        .map(([modelName, config]) => ({
+          name: modelName.replace(/(?!^)[A-Z]/g, ' $&'),
+          description: `Operations about ${config.routeName}`,
+        })),
+      {
+        name: 'Health',
+        description: 'API health check operations',
+      },
+    ],
+    paths: {
+      '/health': {
+        get: {
+          tags: ['Health'],
+          summary: 'Check API health status',
+          parameters: [
+            {
+              name: 'Accept',
+              in: 'header',
+              description: 'Response format (json/xml)',
+              required: false,
+              schema: {
+                type: 'string',
+                enum: ['application/json', 'application/xml'],
+                default: 'application/json',
+              },
+            },
+          ],
+          responses: {
+            200: {
+              description: 'API is healthy',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      data: {
+                        type: 'object',
+                        properties: {
+                          status: {
+                            type: 'string',
+                            example: 'healthy',
+                          },
+                          timestamp: {
+                            type: 'string',
+                            format: 'date-time',
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            500: { $ref: '#/components/responses/ServerError' },
           },
         },
-        required: ['message'],
+      },
+    },
+    components: {
+      schemas: {},
+      responses: {
+        UnauthorizedError: {
+          description: 'Authentication information is missing or invalid',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  error: {
+                    type: 'string',
+                    example: 'Unauthorized',
+                  },
+                },
+              },
+            },
+          },
+        },
+        ValidationError: {
+          description: 'Validation failed',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  error: {
+                    type: 'string',
+                    example: 'Validation Failed',
+                  },
+                  details: {
+                    type: 'array',
+                    items: {
+                      type: 'object',
+                      properties: {
+                        code: { type: 'string' },
+                        message: { type: 'string' },
+                        path: { type: 'array', items: { type: 'string' } },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        ForbiddenError: {
+          description: 'User does not have required permissions',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  error: {
+                    type: 'string',
+                    example: 'You are not authorized to perform this action',
+                  },
+                },
+              },
+            },
+          },
+        },
+        NotFoundError: {
+          description: 'Resource not found',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  error: {
+                    type: 'string',
+                    example: 'Resource not found',
+                  },
+                },
+              },
+            },
+          },
+        },
+        ServerError: {
+          description: 'Internal server error',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  error: {
+                    type: 'string',
+                    example: 'Internal server error',
+                  },
+                },
+              },
+            },
+          },
+        },
       },
     },
   };
 
-  // Helper function to generate content object with both JSON and XML
-  const generateContentTypes = (schema: OpenAPIV3.SchemaObject) => ({
-    'application/json': {
-      schema,
-    },
-    'application/xml': {
-      schema,
-    },
-  });
+  // Generate paths for each route configuration
+  for (const [modelName, config] of Object.entries(routeConfigurations)) {
+    if (modelName === 'Models')
+      continue; // Skip the Models entry
 
-  Object.entries(Routes).forEach(([route, config]) => {
-    const routePath = `/${route}`;
-    paths[routePath] = {
+    const routePath = `/${config.routeName}`;
+    const schemaName = `${modelName}Schema`;
+    const zodSchema = schemas[schemaName as keyof typeof schemas];
+    const jsonSchema = zodToJsonSchema(zodSchema, { name: modelName });
+
+    // Add schema to components
+    spec.components!.schemas![modelName] = jsonSchema.definitions![modelName];
+
+    // Common parameters for all routes
+    const commonParameters = [
+      {
+        name: 'Accept',
+        in: 'header',
+        description: 'Response format (json/xml)',
+        required: false,
+        schema: {
+          type: 'string',
+          enum: ['application/json', 'application/xml'],
+          default: 'application/json',
+        },
+      },
+    ];
+
+    // Generate path operations based on permissions
+    spec.paths[routePath] = {
       get: {
-        tags: [config.modelName],
-        summary: `Get ${config.modelName} list`,
+        tags: [modelName],
+        summary: `Get all ${config.routeName}`,
         parameters: [
+          ...commonParameters,
           {
             name: 'page',
             in: 'query',
-            schema: { type: 'integer', minimum: 1 },
-            description: 'Page number for pagination',
+            description: 'Page number',
+            required: false,
+            schema: { type: 'integer', default: 1 },
           },
           {
             name: 'limit',
             in: 'query',
-            schema: { type: 'integer', minimum: 1 },
-            description: 'Number of items per page',
-          },
-          {
-            name: 'Accept',
-            in: 'header',
-            schema: {
-              type: 'string',
-              enum: ['application/json', 'application/xml'],
-            },
-            description: 'Response format',
+            description: 'Items per page',
+            required: false,
+            schema: { type: 'integer', default: 10 },
           },
         ],
         responses: {
           200: {
             description: 'Successful response',
-            content: generateContentTypes({
-              type: 'object',
-              properties: {
-                data: {
-                  type: 'array',
-                  items: {
-                    $ref: `#/components/schemas/${config.modelName}`,
-                  },
-                },
-                pagination: {
+            content: {
+              'application/json': {
+                schema: {
                   type: 'object',
                   properties: {
-                    currentPage: { type: 'integer' },
-                    totalPages: { type: 'integer' },
-                    totalItems: { type: 'integer' },
-                    itemsPerPage: { type: 'integer' },
+                    data: {
+                      type: 'object',
+                      properties: {
+                        result: {
+                          type: 'array',
+                          items: { $ref: `#/components/schemas/${modelName}` },
+                        },
+                        pagination: {
+                          type: 'object',
+                          properties: {
+                            currentPage: { type: 'integer' },
+                            totalPages: { type: 'integer' },
+                            totalItems: { type: 'integer' },
+                            itemsPerPage: { type: 'integer' },
+                          },
+                        },
+                      },
+                    },
                   },
                 },
               },
-            }),
+            },
           },
-          400: {
-            description: 'Bad Request',
-            content: generateContentTypes(errorResponseSchema),
-          },
-          401: {
-            description: 'Unauthorized',
-            content: generateContentTypes(errorResponseSchema),
-          },
-          403: {
-            description: 'Forbidden',
-            content: generateContentTypes(errorResponseSchema),
-          },
-          404: {
-            description: 'Not Found',
-            content: generateContentTypes(errorResponseSchema),
-          },
-          422: {
-            description: 'Unprocessable Entity',
-            content: generateContentTypes(errorResponseSchema),
+          400: { $ref: '#/components/responses/ValidationError' },
+          401: { $ref: '#/components/responses/UnauthorizedError' },
+          403: { $ref: '#/components/responses/ForbiddenError' },
+          500: { $ref: '#/components/responses/ServerError' },
+        },
+      },
+    };
+
+    // Add POST endpoint
+    spec.paths[routePath].post = {
+      tags: [modelName],
+      summary: `Create new ${config.routeName}`,
+      requestBody: {
+        required: true,
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              properties: {
+                ...Object.fromEntries(
+                  Object.entries(
+                    spec.components!.schemas![modelName].properties,
+                  ).filter(
+                    ([key]) => !['id', 'createdAt', 'updatedAt'].includes(key),
+                  ),
+                ),
+              },
+              required: spec.components!.schemas![modelName].required?.filter(
+                (field: string) =>
+                  !['id', 'createdAt', 'updatedAt'].includes(field),
+              ),
+            },
           },
         },
       },
-      post: {
-        tags: [config.modelName],
-        summary: `Create new ${config.modelName}`,
-        parameters: [
-          {
-            name: 'Accept',
-            in: 'header',
-            schema: {
-              type: 'string',
-              enum: ['application/json', 'application/xml'],
-            },
-            description: 'Response format',
-          },
-        ],
-        requestBody: {
-          required: true,
+      responses: {
+        201: {
+          description: 'Successfully created',
           content: {
             'application/json': {
               schema: {
-                $ref: `#/components/schemas/${config.modelName}`,
+                type: 'object',
+                properties: {
+                  data: { $ref: `#/components/schemas/${modelName}` },
+                },
               },
             },
           },
         },
+        400: { $ref: '#/components/responses/ValidationError' },
+        401: { $ref: '#/components/responses/UnauthorizedError' },
+        403: { $ref: '#/components/responses/ForbiddenError' },
+        500: { $ref: '#/components/responses/ServerError' },
+      },
+    };
+
+    // Add individual resource endpoints
+    spec.paths[`${routePath}/{id}`] = {
+      get: {
+        tags: [modelName],
+        summary: `Get ${config.routeName} by ID`,
+        parameters: [
+          ...commonParameters,
+          {
+            name: 'id',
+            in: 'path',
+            required: true,
+            schema: { type: 'string' },
+            description: 'ID of the resource to retrieve',
+          },
+        ],
         responses: {
-          201: {
-            description: 'Successfully created',
-            content: generateContentTypes({
-              type: 'object',
-              allOf: [
-                {
-                  $ref: `#/components/schemas/${config.modelName}`,
+          200: {
+            description: 'Successfully retrieved',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    data: { $ref: `#/components/schemas/${modelName}` },
+                  },
                 },
-              ],
-            }),
+              },
+            },
           },
-          400: {
-            description: 'Bad Request - Invalid input',
-            content: generateContentTypes(errorResponseSchema),
-          },
-          401: {
-            description: 'Unauthorized',
-            content: generateContentTypes(errorResponseSchema),
-          },
-          403: {
-            description: 'Forbidden - Insufficient permissions',
-            content: generateContentTypes(errorResponseSchema),
-          },
-          422: {
-            description: 'Unprocessable Entity',
-            content: generateContentTypes(errorResponseSchema),
-          },
+          401: { $ref: '#/components/responses/UnauthorizedError' },
+          403: { $ref: '#/components/responses/ForbiddenError' },
+          404: { $ref: '#/components/responses/NotFoundError' },
+          500: { $ref: '#/components/responses/ServerError' },
         },
       },
       put: {
-        tags: [config.modelName],
-        summary: `Update ${config.modelName}`,
+        tags: [modelName],
+        summary: `Update ${config.routeName}`,
         parameters: [
+          ...commonParameters,
           {
             name: 'id',
-            in: 'query',
+            in: 'path',
             required: true,
             schema: { type: 'string' },
-            description: 'ID of the resource to update',
           },
         ],
         requestBody: {
@@ -212,7 +425,21 @@ function generatePaths(): OpenAPIV3.PathsObject {
           content: {
             'application/json': {
               schema: {
-                $ref: `#/components/schemas/${config.modelName}`,
+                type: 'object',
+                properties: {
+                  ...Object.fromEntries(
+                    Object.entries(
+                      spec.components!.schemas![modelName].properties,
+                    ).filter(
+                      ([key]) =>
+                        !['id', 'createdAt', 'updatedAt'].includes(key),
+                    ),
+                  ),
+                },
+                required: spec.components!.schemas![modelName].required?.filter(
+                  (field: string) =>
+                    !['id', 'createdAt', 'updatedAt'].includes(field),
+                ),
               },
             },
           },
@@ -223,63 +450,31 @@ function generatePaths(): OpenAPIV3.PathsObject {
             content: {
               'application/json': {
                 schema: {
-                  $ref: `#/components/schemas/${config.modelName}`,
+                  type: 'object',
+                  properties: {
+                    data: { $ref: `#/components/schemas/${modelName}` },
+                  },
                 },
               },
             },
           },
-          400: {
-            description: 'Bad Request - Invalid input or ID',
-            content: {
-              'application/json': {
-                schema: errorResponseSchema,
-              },
-            },
-          },
-          401: {
-            description: 'Unauthorized - Invalid or missing token',
-            content: {
-              'application/json': {
-                schema: errorResponseSchema,
-              },
-            },
-          },
-          403: {
-            description: 'Forbidden - Insufficient permissions',
-            content: {
-              'application/json': {
-                schema: errorResponseSchema,
-              },
-            },
-          },
-          404: {
-            description: 'Not Found - Resource not found',
-            content: {
-              'application/json': {
-                schema: errorResponseSchema,
-              },
-            },
-          },
-          422: {
-            description: 'Unprocessable Entity - Database constraint violation',
-            content: {
-              'application/json': {
-                schema: errorResponseSchema,
-              },
-            },
-          },
+          400: { $ref: '#/components/responses/ValidationError' },
+          401: { $ref: '#/components/responses/UnauthorizedError' },
+          403: { $ref: '#/components/responses/ForbiddenError' },
+          404: { $ref: '#/components/responses/NotFoundError' },
+          500: { $ref: '#/components/responses/ServerError' },
         },
       },
       delete: {
-        tags: [config.modelName],
-        summary: `Delete ${config.modelName}`,
+        tags: [modelName],
+        summary: `Delete ${config.routeName}`,
         parameters: [
+          ...commonParameters,
           {
             name: 'id',
-            in: 'query',
+            in: 'path',
             required: true,
             schema: { type: 'string' },
-            description: 'ID of the resource to delete',
           },
         ],
         responses: {
@@ -290,72 +485,36 @@ function generatePaths(): OpenAPIV3.PathsObject {
                 schema: {
                   type: 'object',
                   properties: {
-                    message: {
-                      type: 'string',
-                      example: 'Resource successfully deleted',
-                    },
+                    data: { $ref: `#/components/schemas/${modelName}` },
                   },
                 },
               },
             },
           },
-          400: {
-            description: 'Bad Request - Invalid ID',
-            content: {
-              'application/json': {
-                schema: errorResponseSchema,
-              },
-            },
-          },
-          401: {
-            description: 'Unauthorized - Invalid or missing token',
-            content: {
-              'application/json': {
-                schema: errorResponseSchema,
-              },
-            },
-          },
-          403: {
-            description: 'Forbidden - Insufficient permissions',
-            content: {
-              'application/json': {
-                schema: errorResponseSchema,
-              },
-            },
-          },
-          404: {
-            description: 'Not Found - Resource not found',
-            content: {
-              'application/json': {
-                schema: errorResponseSchema,
-              },
-            },
-          },
-          422: {
-            description: 'Unprocessable Entity - Database constraint violation',
-            content: {
-              'application/json': {
-                schema: errorResponseSchema,
-              },
-            },
-          },
+          401: { $ref: '#/components/responses/UnauthorizedError' },
+          403: { $ref: '#/components/responses/ForbiddenError' },
+          404: { $ref: '#/components/responses/NotFoundError' },
+          500: { $ref: '#/components/responses/ServerError' },
         },
       },
     };
-  });
+  }
 
-  return paths;
+  return spec;
 }
 
-function generateSchemas(): { [key: string]: OpenAPIV3.SchemaObject } {
-  const schemas: { [key: string]: OpenAPIV3.SchemaObject } = {};
+export async function GET(request: NextRequest) {
+  try {
+    const spec = await generateOpenAPISpec();
+    const requestHeader = request.headers.get('Accept') ?? undefined;
 
-  Object.entries(Routes).forEach(([_, config]) => {
-    if (config.schema) {
-      const jsonSchema = zodToJsonSchema(config.schema);
-      schemas[config.modelName] = jsonSchema as OpenAPIV3.SchemaObject;
-    }
-  });
-
-  return schemas;
+    return NextResponse.json(spec, { status: StatusCodes.OK });
+  }
+  catch (error) {
+    return ResponseFormatter.formatError(
+      { message: 'Failed to generate OpenAPI documentation' },
+      request.headers.get('Accept') ?? undefined,
+      StatusCodes.INTERNAL_SERVER_ERROR,
+    );
+  }
 }

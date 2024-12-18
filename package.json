@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "bun run lint:fix && prisma generate && next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint .",
     "lint:fix": "eslint \"src/**/*.{ts,tsx}\" --fix",
@@ -27,9 +27,9 @@
     "clsx": "^2.1.1",
     "dotenv": "^16.4.5",
     "dotenv-expand": "^12.0.1",
-    "lucide-react": "^0.468.0",
     "http-status-codes": "^2.3.0",
     "jstoxml": "^5.0.2",
+    "lucide-react": "^0.468.0",
     "next": "15.1.0",
     "next-themes": "^0.4.4",
     "nextjs-routes": "^2.2.4",
@@ -48,6 +48,7 @@
     "tailwindcss-animate": "^1.0.7",
     "ts-jest": "^29.2.5",
     "zod": "^3.23.8",
+    "zod-prisma-types": "^3.2.1",
     "zod-to-json-schema": "^3.22.3"
   },
   "devDependencies": {

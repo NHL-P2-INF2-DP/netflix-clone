@@ -1,160 +1,100 @@
 import { Role } from '@prisma/client';
 
-import * as Schemas from '@/lib/schemas';
+import type { RouteConfigInputType } from '@/lib/classes/route-manager';
 
-// permissions for each role
-export interface RoutePermissions {
-  [Role.JUNIOR]: boolean;
-  [Role.MEDIOR]: boolean;
-  [Role.SENIOR]: boolean;
-}
+/*
+  This file contains the route configurations for the application.
+  It is used to define the routes and their permissions for each role.
+  New routes can be added here in a type safe manner. if the model does not exist in the prisma schema,
+  the route cannot be created.
+*/
 
-// Define the route configuration type
-export interface RouteConfig {
-  modelName: string;
-  permissions: RoutePermissions;
-  schema: any; // Zod schema
-}
-
-// routes and their permissions
-export const Routes: Record<string, RouteConfig> = {
-  genre: {
-    modelName: 'Genre',
-    permissions: {
-      [Role.JUNIOR]: true,
-      [Role.MEDIOR]: true,
-      [Role.SENIOR]: true,
-    },
-    schema: Schemas.genreSchema,
-  },
-  contentRating: {
-    modelName: 'ContentRating',
-    permissions: {
-      [Role.JUNIOR]: true,
-      [Role.MEDIOR]: true,
-      [Role.SENIOR]: true,
-    },
-    schema: Schemas.contentRatingSchema,
-  },
-  content: {
-    modelName: 'Content',
-    permissions: {
-      [Role.JUNIOR]: true,
-      [Role.MEDIOR]: true,
-      [Role.SENIOR]: true,
-    },
-    schema: Schemas.contentSchema,
-  },
-  language: {
-    modelName: 'Language',
-    permissions: {
-      [Role.JUNIOR]: true,
-      [Role.MEDIOR]: true,
-      [Role.SENIOR]: true,
-    },
-    schema: Schemas.languageSchema,
-  },
-  subtitle: {
-    modelName: 'Subtitle',
-    permissions: {
-      [Role.JUNIOR]: true,
-      [Role.MEDIOR]: true,
-      [Role.SENIOR]: true,
-    },
-    schema: Schemas.subtitleSchema,
-  },
-  contentMetadata: {
-    modelName: 'ContentMetadata',
-    permissions: {
-      [Role.JUNIOR]: true,
-      [Role.MEDIOR]: true,
-      [Role.SENIOR]: true,
-    },
-    schema: Schemas.contentMetadataSchema,
-  },
-  netflixAccount: {
-    modelName: 'NetflixAccount',
-    permissions: {
-      [Role.JUNIOR]: false,
-      [Role.MEDIOR]: true,
-      [Role.SENIOR]: true,
-    },
-    schema: Schemas.netflixAccountSchema,
-  },
-  previousPasswordHash: {
-    modelName: 'PreviousPasswordHash',
-    permissions: {
-      [Role.JUNIOR]: true,
-      [Role.MEDIOR]: true,
-      [Role.SENIOR]: true,
-    },
-    schema: Schemas.previousPasswordHashSchema,
-  },
-  profile: {
-    modelName: 'Profile',
-    permissions: {
-      [Role.JUNIOR]: false,
-      [Role.MEDIOR]: true,
-      [Role.SENIOR]: true,
-    },
-    schema: Schemas.profileSchema,
-  },
-  subscriptionType: {
-    modelName: 'SubscriptionType',
-    permissions: {
-      [Role.JUNIOR]: false,
-      [Role.MEDIOR]: false,
-      [Role.SENIOR]: true,
-    },
-    schema: Schemas.subscriptionTypeSchema,
-  },
-  subscription: {
-    modelName: 'Subscription',
-    permissions: {
-      [Role.JUNIOR]: false,
-      [Role.MEDIOR]: false,
-      [Role.SENIOR]: true,
-    },
-    schema: Schemas.subscriptionSchema,
-  },
-  invoice: {
-    modelName: 'Invoice',
-    permissions: {
-      [Role.JUNIOR]: false,
-      [Role.MEDIOR]: false,
-      [Role.SENIOR]: true,
-    },
-    schema: Schemas.invoiceSchema,
-  },
-  viewingHistory: {
-    modelName: 'ViewingHistory',
-    permissions: {
-      [Role.JUNIOR]: true,
-      [Role.MEDIOR]: true,
-      [Role.SENIOR]: true,
-    },
-    schema: Schemas.viewingHistorySchema,
-  },
-  watchlist: {
-    modelName: 'Watchlist',
-    permissions: {
-      [Role.JUNIOR]: true,
-      [Role.MEDIOR]: true,
-      [Role.SENIOR]: true,
-    },
-    schema: Schemas.watchlistSchema,
-  },
+// Define common permission sets
+const FULL_ACCESS = {
+  read: true,
+  create: true,
+  update: true,
+  delete: true,
 } as const;
 
-// Define the type for route keys
-export type RouteKey = keyof typeof Routes;
+const NO_ACCESS = {
+  read: false,
+  create: false,
+  update: false,
+  delete: false,
+} as const;
 
-// Utility function to get model name
-export function getModelName(route: RouteKey): string {
-  return Routes[route].modelName;
+// Define role permission templates
+const ALL_ROLES_FULL_ACCESS = {
+  [Role.JUNIOR]: FULL_ACCESS,
+  [Role.MEDIOR]: FULL_ACCESS,
+  [Role.SENIOR]: FULL_ACCESS,
+} as const;
+
+const SENIOR_ONLY = {
+  [Role.JUNIOR]: NO_ACCESS,
+  [Role.MEDIOR]: NO_ACCESS,
+  [Role.SENIOR]: FULL_ACCESS,
+} as const;
+
+const MEDIOR_AND_SENIOR = {
+  [Role.JUNIOR]: NO_ACCESS,
+  [Role.MEDIOR]: FULL_ACCESS,
+  [Role.SENIOR]: FULL_ACCESS,
+} as const;
+
+// Add RouteConfig export
+export interface RouteConfig {
+  routeName: string;
+  permissions: Record<
+    Role,
+    {
+      read: boolean;
+      create: boolean;
+      update: boolean;
+      delete: boolean;
+    }
+  >;
+  tags?: string[];
 }
 
-// Utility function to check permissions
-export function checkRoutePermission(route: RouteKey, role: Role): boolean {
-  return Routes[route].permissions[role];
-}
+export const routeConfigurations: RouteConfigInputType = {
+  // Content-related routes - full access for all roles
+  Genre: { routeName: 'genre', permissions: ALL_ROLES_FULL_ACCESS },
+  ContentRating: {
+    routeName: 'content-rating',
+    permissions: ALL_ROLES_FULL_ACCESS,
+  },
+  Content: { routeName: 'content', permissions: ALL_ROLES_FULL_ACCESS },
+  Language: { routeName: 'language', permissions: ALL_ROLES_FULL_ACCESS },
+  Subtitle: { routeName: 'subtitle', permissions: ALL_ROLES_FULL_ACCESS },
+  ContentMetadata: {
+    routeName: 'content-metadata',
+    permissions: ALL_ROLES_FULL_ACCESS,
+  },
+  ViewingHistory: {
+    routeName: 'viewing-history',
+    permissions: ALL_ROLES_FULL_ACCESS,
+  },
+  Watchlist: { routeName: 'watchlist', permissions: ALL_ROLES_FULL_ACCESS },
+
+  // Account-related routes - Medior and Senior only
+  NetflixAccount: {
+    routeName: 'netflix-account',
+    permissions: MEDIOR_AND_SENIOR,
+  },
+  PreviousPasswordHash: {
+    routeName: 'previous-password-hash',
+    permissions: MEDIOR_AND_SENIOR,
+  },
+  Profile: { routeName: 'profile', permissions: MEDIOR_AND_SENIOR },
+
+  // Subscription and billing - Senior only
+  Subscription: { routeName: 'subscription', permissions: SENIOR_ONLY },
+  SubscriptionType: {
+    routeName: 'subscription-type',
+    permissions: SENIOR_ONLY,
+  },
+  Invoice: { routeName: 'invoice', permissions: SENIOR_ONLY },
+  User: { routeName: 'user', permissions: SENIOR_ONLY },
+} as const;
