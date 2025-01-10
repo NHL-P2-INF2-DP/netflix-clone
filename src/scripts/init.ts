@@ -1,6 +1,9 @@
 /* eslint-disable no-console */
 // This file is used to add the initial data to the database.
 
+import {
+  PaymentStatus,
+} from '@prisma/client';
 import { hash } from 'bcryptjs';
 
 import prisma from '@/lib/prisma';
@@ -73,6 +76,34 @@ const demoAccount = await prisma.netflixAccount.create({
     email: 'demo@example.com',
     password: await hash('demo123', 10),
     activated: true,
+  },
+});
+// Create Profile for Demo Account
+const demoProfile = await prisma.profile.create({
+  data: {
+    accountId: demoAccount.id,
+    name: 'Demo User',
+    dateOfBirth: new Date('1990-01-01'),
+    language: 'en',
+    profileImage: 'https://example.com/default-avatar.png',
+  },
+});
+
+// Create Demo Subscription
+const demoSubscription = await prisma.subscription.create({
+  data: {
+    accountId: demoAccount.id,
+    subscriptionTypeId: subscriptionTypes[1].id, // Premium
+    beginDate: new Date(),
+    endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+  },
+});
+
+// Create Demo Invoice
+await prisma.invoice.create({
+  data: {
+    subscriptionId: demoSubscription.id,
+    isPaid: PaymentStatus.PAID,
   },
 });
 
