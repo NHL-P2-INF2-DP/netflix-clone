@@ -1,6 +1,8 @@
 /* eslint-disable no-console */
 // This file is used to add the initial data to the database.
 
+import { hash } from 'bcryptjs';
+
 import prisma from '@/lib/prisma';
 
 async function main() {
@@ -48,6 +50,31 @@ const contentRatings = await Promise.all([
   prisma.contentRating.create({ data: { ratingType: '4K' } }),
   prisma.contentRating.create({ data: { ratingType: '8K' } }),
 ]);
+
+// Create Subscription Types
+const subscriptionTypes = await Promise.all([
+  prisma.subscriptionType.create({
+    data: {
+      type: 'Basic',
+      priceInEuroCents: 799,
+    },
+  }),
+  prisma.subscriptionType.create({
+    data: {
+      type: 'Premium',
+      priceInEuroCents: 1299,
+    },
+  }),
+]);
+
+// Create Demo Netflix Account
+const demoAccount = await prisma.netflixAccount.create({
+  data: {
+    email: 'demo@example.com',
+    password: await hash('demo123', 10),
+    activated: true,
+  },
+});
 
 main()
   .catch((e) => {
