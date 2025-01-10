@@ -12,6 +12,7 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN bun run build
+RUN bun run db:seed
 
 # Stage 3: Production server
 FROM base AS runner
