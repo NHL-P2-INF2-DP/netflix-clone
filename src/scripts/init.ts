@@ -27,6 +27,27 @@ async function main() {
     prisma.account.deleteMany(),
   ]);
 }
+// Create Genres
+const genres = await Promise.all([
+  prisma.genre.create({ data: { name: 'Action' } }),
+  prisma.genre.create({ data: { name: 'Comedy' } }),
+  prisma.genre.create({ data: { name: 'Drama' } }),
+  prisma.genre.create({ data: { name: 'Sci-Fi' } }),
+]);
+
+// Create Languages
+const languages = await Promise.all([
+  prisma.language.create({ data: { language: 'English' } }),
+  prisma.language.create({ data: { language: 'Spanish' } }),
+  prisma.language.create({ data: { language: 'French' } }),
+]);
+
+// Create Content Ratings
+const contentRatings = await Promise.all([
+  prisma.contentRating.create({ data: { ratingType: 'HD' } }),
+  prisma.contentRating.create({ data: { ratingType: '4K' } }),
+  prisma.contentRating.create({ data: { ratingType: '8K' } }),
+]);
 
 main()
   .catch((e) => {
