@@ -1,33 +1,25 @@
-import type { Metadata } from 'next';
+import type { Metadata } from "next"
+import { Inter } from 'next/font/google'
+import "./globals.css"
 
-import { Geist } from 'next/font/google';
-
-import '@/styles/globals.css';
-import Providers from '@/components/providers';
-import { Toaster } from '@/components/ui/sonner';
-
-const geist = Geist({
-  subsets: ['latin'],
-});
+const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: 'Netflix Clone ',
-  description: 'Een app voor Data Proccesing van NHL Stenden',
-};
+  title: "Netflix Employee Dashboard",
+  description: "Management panel for Netflix employees",
+}
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: {
+  children: React.ReactNode
+}) {
   return (
-    <html lang="en">
-      <body className={`antialiased ${geist.className}`}>
-        <Providers>
-          {children}
-          <Toaster richColors />
-        </Providers>
+    <html lang="en" className="dark">
+      <body className={`${inter.className} bg-background text-foreground antialiased min-h-screen`}>
+        {children}
       </body>
     </html>
-  );
+  )
 }
+
