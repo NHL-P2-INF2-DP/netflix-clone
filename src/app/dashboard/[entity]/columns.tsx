@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { mockSchema } from "@/lib/mockData"
 
-const ActionColumn: ColumnDef<any, any> = {
+const ActionColumn: ColumnDef<Record<string, unknown>, unknown> = {
   id: "actions",
   cell: ({ row }) => {
     const item = row.original
@@ -27,7 +27,7 @@ const ActionColumn: ColumnDef<any, any> = {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>Actions</DropdownMenuLabel>
-          <DropdownMenuItem onClick={() => navigator.clipboard.writeText(item.id)}>
+          <DropdownMenuItem onClick={() => navigator.clipboard.writeText(item.id as string)}>
             Copy ID
           </DropdownMenuItem>
           <DropdownMenuSeparator />
@@ -45,24 +45,24 @@ const ActionColumn: ColumnDef<any, any> = {
   },
 }
 
-export const columns: Record<string, ColumnDef<any, any>[]> = Object.keys(mockSchema).reduce((acc, entity) => {
+export const columns: Record<string, ColumnDef<Record<string, unknown>, unknown>[]> = Object.keys(mockSchema).reduce((acc, entity) => {
   acc[entity] = [
     ...mockSchema[entity].map(field => ({
       accessorKey: field.name,
       header: field.name,
-      cell: (info: { getValue: () => any }) => {
-        const value = info.getValue()
+      cell: (info) => {
+        const value = info.getValue() as unknown
         if (value instanceof Date) {
           return value.toLocaleString()
         }
         if (typeof value === 'boolean') {
           return value ? 'Yes' : 'No'
         }
-        return value
+        return value as string
       }
     })),
     ActionColumn
   ]
   return acc
-}, {} as Record<string, ColumnDef<any, any>[]>)
+}, {} as Record<string, ColumnDef<Record<string, unknown>, unknown>[]>)
 

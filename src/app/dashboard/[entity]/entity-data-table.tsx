@@ -8,22 +8,19 @@ import { Button } from "@/components/ui/button"
 import { PlusCircle } from 'lucide-react'
 import { DynamicForm } from "@/components/dynamic-form"
 import { Modal } from "@/components/ui/modal"
-import { getFieldsFromMockSchema, mockData } from "@/lib/mockData"
+import { getFieldsFromPrismaSchema } from "@/lib/prisma-schema-parser"
 
 interface EntityDataTableProps {
   entity: string
+  initialData: Record<string, unknown>[]
 }
 
-export function EntityDataTable({ entity }: EntityDataTableProps) {
+export function EntityDataTable({ entity, initialData }: EntityDataTableProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [data, setData] = useState<any[]>([])
-  const [filteredData, setFilteredData] = useState<any[]>([])
+  const [data, setData] = useState<Record<string, unknown>[]>(initialData)
+  const [filteredData, setFilteredData] = useState<Record<string, unknown>[]>(initialData)
   
-  useEffect(() => {
-    setData(mockData[entity as keyof typeof mockData] || [])
-  }, [entity])
-
   useEffect(() => {
     setFilteredData(
       data.filter(item =>
@@ -44,10 +41,27 @@ export function EntityDataTable({ entity }: EntityDataTableProps) {
     setIsModalOpen(true)
   }
 
-  const handleSubmit = (formData: any) => {
-    console.log('Form submitted:', formData)
-    setIsModalOpen(false)
-    setData(prevData => [...prevData, formData])
+  const handleSubmit = async (formData: Record<string, unknown>) => {
+    try {
+      const response = await fetch(`/api/${entity}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to add new item')
+      }
+
+      const newItem = await response.json()
+      setData(prevData => [...prevData, newItem])
+      setIsModalOpen(false)
+    } catch (error) {
+      console.error('Error adding new item:', error)
+      // Handle error (e.g., show error message to user)
+    }
   }
 
   const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
@@ -75,7 +89,7 @@ export function EntityDataTable({ entity }: EntityDataTableProps) {
       </div>
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={`Add ${capitalize(entity)}`}>
         <DynamicForm 
-          fields={getFieldsFromMockSchema(entity)}
+          fields={getFieldsFromPrismaSchema(entity)}
           onSubmit={handleSubmit}
         />
       </Modal>

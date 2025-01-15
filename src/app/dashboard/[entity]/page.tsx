@@ -1,22 +1,33 @@
 import { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { capitalize } from "@/lib/utils"
-import { mockData } from "@/lib/mockData"
+import { prisma } from "@/lib/prisma"
 import { EntityDataTable } from "./entity-data-table"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
-export async function generateMetadata({ params }: { params: { entity: string } }): Promise<Metadata> {
+type PageProps = {
+  params: { entity: string }
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   return {
     title: `${capitalize(params.entity)} Management`,
     description: `Manage Netflix ${params.entity}`,
   }
 }
 
-export default function EntityPage({ params }: { params: { entity: string } }) {
+export default async function EntityPage({ params }: PageProps) {
   const { entity } = params
-  const data = mockData[entity as keyof typeof mockData]
 
-  if (!data) {
+  let data: Record<string, unknown>[] = []
+  try {
+    data = await prisma[entity].findMany()
+  } catch (error) {
+    console.error(`Error fetching ${entity}:`, error)
+    notFound()
+  }
+
+  if (!data || data.length === 0) {
     notFound()
   }
 
@@ -29,8 +40,8 @@ export default function EntityPage({ params }: { params: { entity: string } }) {
         <CardHeader className="bg-gray-50 dark:bg-gray-800/50 px-8 py-6">
           <CardTitle className="text-xl">{capitalize(entity)} List</CardTitle>
         </CardHeader>
-        <CardContent className="p-0"> 
-          <EntityDataTable entity={entity} />
+        <CardContent className="p-0">
+          <EntityDataTable entity={entity} initialData={data} />
         </CardContent>
       </Card>
     </div>
