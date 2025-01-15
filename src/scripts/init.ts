@@ -2,11 +2,7 @@
 // This file is used to add the initial data to the database.
 // it will create mock data for the database and it will create a demo user with a random avatar using an external API.
 
-import {
-  AgeRating,
-  ContentType,
-  PaymentStatus,
-} from '@prisma/client';
+import { AgeRating, ContentType, PaymentStatus, Role } from '@prisma/client';
 import { hash } from 'bcryptjs';
 import { Buffer } from 'node:buffer';
 
@@ -118,7 +114,7 @@ async function main() {
     prisma.content.create({
       data: {
         title: 'The Matrix',
-        duration: new Date(1999, 0, 1, 2, 16), // 2h 16min
+        durationInSeconds: 8949,
         releaseDate: new Date('1999-03-31'),
         ContentMetadata: {
           create: {
@@ -135,7 +131,7 @@ async function main() {
     prisma.content.create({
       data: {
         title: 'Inception',
-        duration: new Date(2010, 0, 1, 2, 28), // 2h 28min
+        durationInSeconds: 18949,
         releaseDate: new Date('2010-07-16'),
         ContentMetadata: {
           create: {
@@ -176,6 +172,68 @@ async function main() {
       },
     },
   );
+
+  await Promise.all([
+    authClient.signUp.email(
+      {
+        email: 'junior@demo.  com',
+        password: 'password123',
+        name: 'Junior User',
+        image: `data:image/svg+xml;base64,${avatarBase64}`,
+      },
+      {
+        onError: (error) => {
+          console.error('Error signing up:', error);
+        },
+        onSuccess: (data) => {
+          console.log('Successfully signed up:', data);
+        },
+      },
+    ),
+    authClient.signUp.email(
+      {
+        email: 'medior@demo.com',
+        password: 'password123',
+        name: 'Medior User',
+        image: `data:image/svg+xml;base64,${avatarBase64}`,
+      },
+      {
+        onError: (error) => {
+          console.error('Error signing up:', error);
+        },
+        onSuccess: (data) => {
+          console.log('Successfully signed up:', data);
+        },
+      },
+    ),
+    authClient.signUp.email(
+      {
+        email: 'senior@demo.com',
+        password: 'password123',
+        name: 'Senior User',
+        image: `data:image/svg+xml;base64,${avatarBase64}`,
+      },
+      {
+        onError: (error) => {
+          console.error('Error signing up:', error);
+        },
+        onSuccess: (data) => {
+          console.log('Successfully signed up:', data);
+        },
+      },
+    ),
+  ]);
+
+  await Promise.all([
+    prisma.user.update({
+      where: { email: 'medior@demo.com' },
+      data: { role: Role.MEDIOR },
+    }),
+    prisma.user.update({
+      where: { email: 'senior@demo.com' },
+      data: { role: Role.SENIOR },
+    }),
+  ]);
 
   console.log('✅ Database seeding completed!');
 }
