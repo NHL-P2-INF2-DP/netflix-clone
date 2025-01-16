@@ -45,50 +45,61 @@ enum PaymentStatus {
 
 model Genre {
   id              String            @id @default(uuid())
-  name            String            @unique
+  name            String            @unique @db.VarChar(50)
   ContentMetadata ContentMetadata[]
+
+  @@index([name])
 }
 
 model ContentRating {
   id              String            @id @default(uuid())
-  ratingType      String            @unique @map("rating_type")
+  ratingType      String            @unique @map("rating_type") @db.VarChar(20)
   ContentMetadata ContentMetadata[]
+
+  @@index([ratingType])
 }
 
 model Content {
-  id              String            @id @default(uuid())
-  title           String
-  duration        DateTime
-  releaseDate     DateTime          @map("release_date")
-  season          Int?
-  qualityId       String?           @map("quality_id")
-  createdAt       DateTime          @default(now()) @map("created_at")
-  updatedAt       DateTime          @updatedAt @map("updated_at")
-  ContentMetadata ContentMetadata[]
-  ViewingHistory  ViewingHistory[]
-  Watchlist       Watchlist[]
+  id                String            @id @default(uuid())
+  title             String            @db.VarChar(255)
+  durationInSeconds Int               @db.Integer
+  releaseDate       DateTime          @map("release_date") @db.Date
+  season            Int?              @db.SmallInt
+  qualityId         String?           @map("quality_id")
+  createdAt         DateTime          @default(now()) @map("created_at")
+  updatedAt         DateTime          @updatedAt @map("updated_at")
+  ContentMetadata   ContentMetadata[]
+  ViewingHistory    ViewingHistory[]
+  Watchlist         Watchlist[]
+
+  @@index([title])
+  @@index([releaseDate])
 }
 
 model Language {
   id              String            @id @default(uuid())
-  language        String            @unique
+  language        String            @unique @db.VarChar(50)
   Subtitle        Subtitle[]
   ContentMetadata ContentMetadata[]
+
+  @@index([language])
 }
 
 model Subtitle {
   id              String            @id @default(uuid())
   languageId      String            @map("language_id")
-  content         String
+  content         String            @db.Text
   language        Language          @relation(fields: [languageId], references: [id], onDelete: Cascade)
   ContentMetadata ContentMetadata[]
+
+  @@index([languageId])
 }
 
 model ContentMetadata {
   id              String      @id @default(uuid())
-  title           String?
+  title           String?     @db.VarChar(255)
   genreId         String?     @map("genre_id")
-  rating          Int?        @db.Integer
+  rating          Int?        @db.SmallInt
   contentId       String      @map("content_id")
   languageId      String?     @map("language_id")
   subtitleId      String?     @map("subtitle_id")
@@ -104,14 +115,14 @@ model ContentMetadata {
   subtitle      Subtitle?      @relation(fields: [subtitleId], references: [id], onDelete: SetNull)
   contentRating ContentRating? @relation(fields: [contentRatingId], references: [id], onDelete: SetNull)
 
-  @@index([contentId])
-  @@index([genreId])
+  @@index([contentId, contentType])
+  @@index([genreId, ageRating])
 }
 
 model NetflixAccount {
   id                    String                 @id @default(uuid())
-  email                 String                 @unique
-  password              String
+  email                 String                 @unique @db.VarChar(255)
+  password              String                 @db.VarChar(255)
   activated             Boolean                @default(false)
   blockedUntil          DateTime?              @map("blocked_until")
   createdAt             DateTime               @default(now()) @map("created_at")
@@ -120,39 +131,43 @@ model NetflixAccount {
   PreviousPasswordHash  PreviousPasswordHash[]
   Subscription          Subscription[]
   ReferredSubscriptions Subscription[]         @relation("Referral")
+
+  @@index([email, activated])
 }
 
 model PreviousPasswordHash {
   id           String         @id @default(uuid())
   accountId    String         @map("account_id")
-  passwordHash String         @map("password_hash")
+  passwordHash String         @map("password_hash") @db.VarChar(255)
   createdAt    DateTime       @default(now()) @map("created_at")
   account      NetflixAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
 
-  @@index([accountId])
+  @@index([accountId, createdAt])
 }
 
 model Profile {
   id             String           @id @default(uuid())
   accountId      String           @map("account_id")
-  name           String
-  profileImage   String?          @map("profile_image")
-  dateOfBirth    DateTime         @map("date_of_birth")
-  language       String           @default("en")
+  name           String           @db.VarChar(100)
+  profileImage   String?          @map("profile_image") @db.VarChar(255)
+  dateOfBirth    DateTime         @map("date_of_birth") @db.Date
+  language       String           @default("en") @db.VarChar(5)
   createdAt      DateTime         @default(now()) @map("created_at")
   updatedAt      DateTime         @updatedAt @map("updated_at")
   account        NetflixAccount   @relation(fields: [accountId], references: [id], onDelete: Cascade)
   ViewingHistory ViewingHistory[]
   Watchlist      Watchlist[]
 
-  @@index([accountId])
+  @@index([accountId, name])
 }
 
 model SubscriptionType {
   id               String         @id @default(uuid())
-  type             String         @unique
-  priceInEuroCents Int           @map("price_in_euro_cents") @default(0)
+  type             String         @unique @db.VarChar(50)
+  priceInEuroCents Int            @default(0) @map("price_in_euro_cents")
   Subscription     Subscription[]
+
+  @@index([type])
 }
 
 model Subscription {
@@ -170,7 +185,8 @@ model Subscription {
   referredBy       NetflixAccount?  @relation("Referral", fields: [referralId], references: [id], onDelete: SetNull)
   Invoice          Invoice[]
 
-  @@index([accountId])
+  @@index([accountId, endDate])
+  @@index([subscriptionTypeId, beginDate])
 }
 
 model Invoice {
@@ -180,6 +196,8 @@ model Invoice {
   createdAt      DateTime      @default(now()) @map("created_at")
   updatedAt      DateTime      @updatedAt @map("updated_at")
   subscription   Subscription  @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  @@index([subscriptionId, isPaid])
 }
 
 model ViewingHistory {
@@ -187,15 +205,14 @@ model ViewingHistory {
   profileId          String   @map("profile_id")
   contentId          String   @map("content_id")
   watchDate          DateTime @default(now()) @map("watch_date")
-  progressPercentage Float    @map("progress_percentage")
+  progressPercentage Float    @map("progress_percentage") @db.Real
   profile            Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
   content            Content  @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  @@index([profileId])
-  @@index([contentId])
+  @@index([profileId, watchDate])
+  @@index([contentId, progressPercentage])
 }
 
 model Watchlist {
@@ -209,8 +226,7 @@ model Watchlist {
   content Content @relation(fields: [contentId], references: [id], onDelete: Cascade)
 
   @@unique([profileId, contentId])
-  @@index([profileId])
-  @@index([contentId])
+  @@index([createdAt])
 }
 
 // authentication

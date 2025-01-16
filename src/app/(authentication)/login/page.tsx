@@ -15,13 +15,12 @@ import { cn } from '@/lib/utils';
 
 export default function LoginPage() {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(
       z.object({
@@ -33,7 +32,6 @@ export default function LoginPage() {
 
   const onSubmit = handleSubmit((data) => {
     setError('');
-    setIsLoading(true);
     authClient.signIn.email(
       {
         email: data.email,
@@ -42,13 +40,11 @@ export default function LoginPage() {
       {
         onSuccess: (data) => {
           router.push('/dashboard');
-          setIsLoading(false);
         },
         onError: (ctx) => {
           // set a delay of 3 seconds before showing the error to the user
           setTimeout(() => {
             setError(ctx.error.message);
-            setIsLoading(false);
           }, 3000);
         },
       },
@@ -72,7 +68,7 @@ export default function LoginPage() {
                 </Label>
                 <Input
                   id="email"
-                  disabled={isLoading}
+                  disabled={isSubmitting}
                   type="text"
                   {...register('email')}
                   required
@@ -96,7 +92,7 @@ export default function LoginPage() {
                 </Label>
                 <Input
                   id="password"
-                  disabled={isLoading}
+                  disabled={isSubmitting}
                   type="password"
                   {...register('password')}
                   required
@@ -115,10 +111,10 @@ export default function LoginPage() {
             </div>
             <Button
               type="submit"
-              disabled={isLoading}
+              disabled={isSubmitting}
               className="mt-6 w-full bg-red-600 text-white hover:bg-red-700"
             >
-              {isLoading ? 'Loading...' : 'Sign In'}
+              {isSubmitting ? 'Loading...' : 'Sign In'}
             </Button>
           </form>
         </CardContent>
