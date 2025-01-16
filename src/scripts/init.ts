@@ -2,40 +2,21 @@
 // This file is used to add the initial data to the database.
 // it will create mock data for the database and it will create a demo user with a random avatar using an external API.
 
-import {
-  AgeRating,
-  ContentType,
-  PaymentStatus,
-} from '@prisma/client';
+import { AgeRating, ContentType, PaymentStatus, Role } from '@prisma/client';
 import { hash } from 'bcryptjs';
 import { Buffer } from 'node:buffer';
 
-import { authClient } from '@/lib/auth-client';
 import prisma from '@/lib/prisma';
 
 async function main() {
   console.log('🌱 Starting database seeding...');
 
-  // Clean up existing data
-  await prisma.$transaction([
-    prisma.viewingHistory.deleteMany(),
-    prisma.watchlist.deleteMany(),
-    prisma.contentMetadata.deleteMany(),
-    prisma.content.deleteMany(),
-    prisma.genre.deleteMany(),
-    prisma.contentRating.deleteMany(),
-    prisma.language.deleteMany(),
-    prisma.subtitle.deleteMany(),
-    prisma.invoice.deleteMany(),
-    prisma.subscription.deleteMany(),
-    prisma.subscriptionType.deleteMany(),
-    prisma.profile.deleteMany(),
-    prisma.previousPasswordHash.deleteMany(),
-    prisma.netflixAccount.deleteMany(),
-    prisma.user.deleteMany(),
-    prisma.session.deleteMany(),
-    prisma.account.deleteMany(),
-  ]);
+  // check if the database is already seeded
+  const user = await prisma.user.findFirst();
+  if (user) {
+    console.log('🌱 Database already seeded!');
+    return;
+  }
 
   // Create Genres
   const genres = await Promise.all([
@@ -118,7 +99,7 @@ async function main() {
     prisma.content.create({
       data: {
         title: 'The Matrix',
-        duration: new Date(1999, 0, 1, 2, 16), // 2h 16min
+        durationInSeconds: 8949,
         releaseDate: new Date('1999-03-31'),
         ContentMetadata: {
           create: {
@@ -135,7 +116,7 @@ async function main() {
     prisma.content.create({
       data: {
         title: 'Inception',
-        duration: new Date(2010, 0, 1, 2, 28), // 2h 28min
+        durationInSeconds: 18949,
         releaseDate: new Date('2010-07-16'),
         ContentMetadata: {
           create: {
@@ -153,29 +134,98 @@ async function main() {
 
   // create a random 16 character string
   const randomString = Math.random().toString(36).substring(2, 15);
+  const randomString2 = Math.random().toString(36).substring(2, 15);
+  const randomString3 = Math.random().toString(36).substring(2, 15);
 
   const avatar = await fetch(
     `https://api.dicebear.com/9.x/dylan/svg?seed=${randomString}`,
   ).then(res => res.arrayBuffer());
 
-  const avatarBase64 = Buffer.from(avatar).toString('base64');
+  const avatar2 = await fetch(
+    `https://api.dicebear.com/9.x/dylan/svg?seed=${randomString2}`,
+  ).then(res => res.arrayBuffer());
 
-  await authClient.signUp.email(
-    {
-      email: 'demo@demo.com',
-      password: 'password123',
-      name: 'Demo User',
-      image: `data:image/svg+xml;base64,${avatarBase64}`,
-    },
-    {
-      onError: (error) => {
-        console.error('Error signing up:', error);
+  const avatar3 = await fetch(
+    `https://api.dicebear.com/9.x/dylan/svg?seed=${randomString3}`,
+  ).then(res => res.arrayBuffer());
+
+  const avatarBase64 = Buffer.from(avatar).toString('base64');
+  const avatar2Base64 = Buffer.from(avatar2).toString('base64');
+  const avatar3Base64 = Buffer.from(avatar3).toString('base64');
+
+  function getRandomID() {
+    return Math.random().toString(36).substring(2, 15);
+  }
+
+  const newUser = await prisma.user.createMany({
+    data: [
+      {
+        id: 'tOIdEhJiSiCxUCKRkfHHn',
+        emailVerified: true,
+        email: 'junior@demo.com',
+        name: 'Junior User',
+        image: `data:image/svg+xml;base64,${avatarBase64}`,
+        role: Role.JUNIOR,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       },
-      onSuccess: (data) => {
-        console.log('Successfully signed up:', data);
+      {
+        id: 'rkKWxWd7pfRgmnBHiKxZI',
+        emailVerified: true,
+        email: 'medior@demo.com',
+        name: 'Medior User',
+        image: `data:image/svg+xml;base64,${avatar2Base64}`,
+        role: Role.MEDIOR,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       },
-    },
-  );
+      {
+        id: 'pe07ggzx_CkCi6Or2bph1',
+        emailVerified: true,
+        email: 'senior@demo.com',
+        name: 'Senior User',
+        image: `data:image/svg+xml;base64,${avatar3Base64}`,
+        role: Role.SENIOR,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ],
+  });
+
+  const newAccounts = await prisma.account.createMany({
+    data: [
+      {
+        id: getRandomID(),
+        accountId: 'tOIdEhJiSiCxUCKRkfHHn',
+        providerId: 'credential',
+        userId: 'tOIdEhJiSiCxUCKRkfHHn',
+        password:
+          'a9e36c7b6f60d4a1a43e742c90b7f841:965379b6df85e8c653d584277813e4216bb56929eeafb73439ebe198a7de315196eb3e67056260fd808944b7098c19a9b7c8f4479b5c4af48657896d05b44a0d',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: getRandomID(),
+        accountId: 'rkKWxWd7pfRgmnBHiKxZI',
+        providerId: 'credential',
+        userId: 'rkKWxWd7pfRgmnBHiKxZI',
+        password:
+          'a9e36c7b6f60d4a1a43e742c90b7f841:965379b6df85e8c653d584277813e4216bb56929eeafb73439ebe198a7de315196eb3e67056260fd808944b7098c19a9b7c8f4479b5c4af48657896d05b44a0d',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: getRandomID(),
+        accountId: 'pe07ggzx_CkCi6Or2bph1',
+        providerId: 'credential',
+        userId: 'pe07ggzx_CkCi6Or2bph1',
+        password:
+          'a9e36c7b6f60d4a1a43e742c90b7f841:965379b6df85e8c653d584277813e4216bb56929eeafb73439ebe198a7de315196eb3e67056260fd808944b7098c19a9b7c8f4479b5c4af48657896d05b44a0d',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ],
+  });
 
   console.log('✅ Database seeding completed!');
 }
