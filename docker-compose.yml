@@ -2,10 +2,18 @@ services:
   nextjs:
     build: .
     ports:
-      - '3001:3000'
+      - '3000:3000'
     environment:
       - NODE_ENV=production
     restart: always
+    depends_on:
+      - postgres
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -f http://localhost:3000/api/health || exit 1']
+      interval: 1m30s
+      timeout: 30s
+      retries: 5
+      start_period: 30s
 
   postgres:
     image: postgres:16
@@ -18,3 +26,9 @@ services:
       - '5432:5432'
     volumes:
       - ./data/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 1m30s
+      timeout: 30s
+      retries: 5
+      start_period: 30s
