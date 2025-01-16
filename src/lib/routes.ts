@@ -55,7 +55,6 @@ export interface RouteConfig {
       delete: boolean;
     }
   >;
-  tags?: string[];
 }
 
 export const routeConfigurations: RouteConfigInputType = {

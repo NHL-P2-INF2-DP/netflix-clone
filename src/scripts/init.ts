@@ -2,11 +2,7 @@
 // This file is used to add the initial data to the database.
 // it will create mock data for the database and it will create a demo user with a random avatar using an external API.
 
-import {
-  AgeRating,
-  ContentType,
-  PaymentStatus,
-} from '@prisma/client';
+import { AgeRating, ContentType, PaymentStatus } from '@prisma/client';
 import { hash } from 'bcryptjs';
 import { Buffer } from 'node:buffer';
 

@@ -1,7 +1,9 @@
-"use client"
+'use client';
 
-import { Bell, User } from 'lucide-react'
-import { Button } from "@/components/ui/button"
+import { capitalizeFirstLetter } from 'better-auth';
+import { useRouter } from 'next/navigation';
+
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,32 +11,68 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from '@/components/ui/dropdown-menu';
+import { authClient } from '@/lib/auth-client';
+import { getFirstLetters } from '@/lib/utils';
+
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 
 export function Header() {
+  const router = useRouter();
+  const { data: session } = authClient.useSession();
+
+  if (!session) {
+    return <></>;
+  }
+
   return (
-    <header className="w-full bg-zinc-900 border-b border-zinc-800 px-4 sm:px-6 py-4 relative z-10">
+    <header className="relative z-10 flex h-20 w-full items-center justify-end border-b border-zinc-800 bg-zinc-900 px-4 py-4 sm:px-6">
       <div className="flex justify-end gap-4">
-        <Button variant="ghost" size="sm" className="relative text-gray-300 hover:text-gray-100 hover:bg-zinc-800">
-          <Bell className="h-5 w-5" />
-        </Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="gap-2 text-gray-300 hover:text-gray-100 hover:bg-zinc-800">
-              <User className="h-5 w-5" />
-              <span>John Doe</span>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-2 text-gray-300 hover:bg-zinc-800 hover:text-gray-100"
+            >
+              <Avatar className="size-6">
+                <AvatarImage src={session.user.image || ''}></AvatarImage>
+                <AvatarFallback>
+                  {capitalizeFirstLetter(getFirstLetters(session.user.name))}
+                </AvatarFallback>
+              </Avatar>
+              <span>{capitalizeFirstLetter(session.user.name)}</span>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56 bg-zinc-800 border border-zinc-700 mt-1">
-            <DropdownMenuLabel className="text-gray-300">My Account</DropdownMenuLabel>
+          <DropdownMenuContent
+            align="end"
+            className="mt-1 w-56 border border-zinc-700 bg-zinc-800"
+          >
+            <DropdownMenuLabel className="text-gray-200">
+              Welcome,
+              {capitalizeFirstLetter(session.user.name)}
+            </DropdownMenuLabel>
+            <DropdownMenuLabel className="text-gray-200">
+              {session.user.email}
+            </DropdownMenuLabel>
             <DropdownMenuSeparator className="bg-zinc-700" />
-            <DropdownMenuItem className="text-gray-300 focus:bg-zinc-700 focus:text-gray-100">Profile</DropdownMenuItem>
-            <DropdownMenuItem className="text-gray-300 focus:bg-zinc-700 focus:text-gray-100">Settings</DropdownMenuItem>
-            <DropdownMenuItem className="text-gray-300 focus:bg-zinc-700 focus:text-gray-100">Logout</DropdownMenuItem>
+            <DropdownMenuItem
+              className="text-gray-300 focus:bg-zinc-700 focus:text-gray-100"
+              onClick={async () => {
+                await authClient.signOut({
+                  fetchOptions: {
+                    onSuccess: () => {
+                      router.push('/login');
+                    },
+                  },
+                });
+              }}
+            >
+              Logout
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
     </header>
-  )
+  );
 }
-
