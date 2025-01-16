@@ -6,11 +6,17 @@ import { AgeRating, ContentType, PaymentStatus, Role } from '@prisma/client';
 import { hash } from 'bcryptjs';
 import { Buffer } from 'node:buffer';
 
-import { authClient } from '@/lib/auth-client';
 import prisma from '@/lib/prisma';
 
 async function main() {
   console.log('🌱 Starting database seeding...');
+
+  // check if the database is already seeded
+  const user = await prisma.user.findFirst();
+  if (user) {
+    console.log('🌱 Database already seeded!');
+    return;
+  }
 
   // Create Genres
   const genres = await Promise.all([
@@ -128,91 +134,98 @@ async function main() {
 
   // create a random 16 character string
   const randomString = Math.random().toString(36).substring(2, 15);
+  const randomString2 = Math.random().toString(36).substring(2, 15);
+  const randomString3 = Math.random().toString(36).substring(2, 15);
 
   const avatar = await fetch(
     `https://api.dicebear.com/9.x/dylan/svg?seed=${randomString}`,
   ).then(res => res.arrayBuffer());
 
+  const avatar2 = await fetch(
+    `https://api.dicebear.com/9.x/dylan/svg?seed=${randomString2}`,
+  ).then(res => res.arrayBuffer());
+
+  const avatar3 = await fetch(
+    `https://api.dicebear.com/9.x/dylan/svg?seed=${randomString3}`,
+  ).then(res => res.arrayBuffer());
+
   const avatarBase64 = Buffer.from(avatar).toString('base64');
+  const avatar2Base64 = Buffer.from(avatar2).toString('base64');
+  const avatar3Base64 = Buffer.from(avatar3).toString('base64');
 
-  await authClient.signUp.email(
-    {
-      email: 'demo@demo.com',
-      password: 'password123',
-      name: 'Demo User',
-      image: `data:image/svg+xml;base64,${avatarBase64}`,
-    },
-    {
-      onError: (error) => {
-        console.error('Error signing up:', error);
-      },
-      onSuccess: (data) => {
-        console.log('Successfully signed up:', data);
-      },
-    },
-  );
+  function getRandomID() {
+    return Math.random().toString(36).substring(2, 15);
+  }
 
-  await Promise.all([
-    authClient.signUp.email(
+  const newUser = await prisma.user.createMany({
+    data: [
       {
-        email: 'junior@demo.  com',
-        password: 'password123',
+        id: 'tOIdEhJiSiCxUCKRkfHHn',
+        emailVerified: true,
+        email: 'junior@demo.com',
         name: 'Junior User',
         image: `data:image/svg+xml;base64,${avatarBase64}`,
+        role: Role.JUNIOR,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       },
       {
-        onError: (error) => {
-          console.error('Error signing up:', error);
-        },
-        onSuccess: (data) => {
-          console.log('Successfully signed up:', data);
-        },
-      },
-    ),
-    authClient.signUp.email(
-      {
+        id: 'rkKWxWd7pfRgmnBHiKxZI',
+        emailVerified: true,
         email: 'medior@demo.com',
-        password: 'password123',
         name: 'Medior User',
-        image: `data:image/svg+xml;base64,${avatarBase64}`,
+        image: `data:image/svg+xml;base64,${avatar2Base64}`,
+        role: Role.MEDIOR,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       },
       {
-        onError: (error) => {
-          console.error('Error signing up:', error);
-        },
-        onSuccess: (data) => {
-          console.log('Successfully signed up:', data);
-        },
-      },
-    ),
-    authClient.signUp.email(
-      {
+        id: 'pe07ggzx_CkCi6Or2bph1',
+        emailVerified: true,
         email: 'senior@demo.com',
-        password: 'password123',
         name: 'Senior User',
-        image: `data:image/svg+xml;base64,${avatarBase64}`,
+        image: `data:image/svg+xml;base64,${avatar3Base64}`,
+        role: Role.SENIOR,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ],
+  });
+
+  const newAccounts = await prisma.account.createMany({
+    data: [
+      {
+        id: getRandomID(),
+        accountId: 'tOIdEhJiSiCxUCKRkfHHn',
+        providerId: 'credential',
+        userId: 'tOIdEhJiSiCxUCKRkfHHn',
+        password:
+          'a9e36c7b6f60d4a1a43e742c90b7f841:965379b6df85e8c653d584277813e4216bb56929eeafb73439ebe198a7de315196eb3e67056260fd808944b7098c19a9b7c8f4479b5c4af48657896d05b44a0d',
+        createdAt: new Date(),
+        updatedAt: new Date(),
       },
       {
-        onError: (error) => {
-          console.error('Error signing up:', error);
-        },
-        onSuccess: (data) => {
-          console.log('Successfully signed up:', data);
-        },
+        id: getRandomID(),
+        accountId: 'rkKWxWd7pfRgmnBHiKxZI',
+        providerId: 'credential',
+        userId: 'rkKWxWd7pfRgmnBHiKxZI',
+        password:
+          'a9e36c7b6f60d4a1a43e742c90b7f841:965379b6df85e8c653d584277813e4216bb56929eeafb73439ebe198a7de315196eb3e67056260fd808944b7098c19a9b7c8f4479b5c4af48657896d05b44a0d',
+        createdAt: new Date(),
+        updatedAt: new Date(),
       },
-    ),
-  ]);
-
-  await Promise.all([
-    prisma.user.update({
-      where: { email: 'medior@demo.com' },
-      data: { role: Role.MEDIOR },
-    }),
-    prisma.user.update({
-      where: { email: 'senior@demo.com' },
-      data: { role: Role.SENIOR },
-    }),
-  ]);
+      {
+        id: getRandomID(),
+        accountId: 'pe07ggzx_CkCi6Or2bph1',
+        providerId: 'credential',
+        userId: 'pe07ggzx_CkCi6Or2bph1',
+        password:
+          'a9e36c7b6f60d4a1a43e742c90b7f841:965379b6df85e8c653d584277813e4216bb56929eeafb73439ebe198a7de315196eb3e67056260fd808944b7098c19a9b7c8f4479b5c4af48657896d05b44a0d',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ],
+  });
 
   console.log('✅ Database seeding completed!');
 }
