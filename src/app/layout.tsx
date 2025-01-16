@@ -1,32 +1,33 @@
 import type { Metadata } from 'next';
 
-import { Geist } from 'next/font/google';
+import { Inter } from 'next/font/google';
 
-import '@/styles/globals.css';
-import Providers from '@/components/providers';
-import { Toaster } from '@/components/ui/sonner';
+import './globals.css';
 
-const geist = Geist({
-  subsets: ['latin'],
-});
+import { NuqsAdapter } from 'nuqs/adapters/next/app';
+
+import { ReactQueryProvider } from '@/lib/providers/react-query';
+
+const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Netflix Clone ',
-  description: 'Een app voor Data Proccesing van NHL Stenden',
+  title: 'Netflix Employee Dashboard',
+  description: 'Management panel for Netflix employees',
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
-    <html lang="en">
-      <body className={`antialiased ${geist.className}`}>
-        <Providers>
-          {children}
-          <Toaster richColors />
-        </Providers>
+    <html lang="en" className="dark">
+      <body
+        className={`${inter.className} min-h-screen bg-background text-foreground antialiased`}
+      >
+        <ReactQueryProvider>
+          <NuqsAdapter>{children}</NuqsAdapter>
+        </ReactQueryProvider>
       </body>
     </html>
   );

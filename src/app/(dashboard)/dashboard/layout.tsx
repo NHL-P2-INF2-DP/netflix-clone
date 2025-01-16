@@ -1,34 +1,22 @@
-'use client';
-import { usePathname } from 'next/navigation';
+import { Header } from '@/components/header';
+import { AppSidebar } from '@/components/sidebar';
 
-import { AppSidebar } from '@/components/app-sidebar';
-import { Separator } from '@/components/ui/separator';
-import {
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
-} from '@/components/ui/sidebar';
-
-export default function Page({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
-  let route = pathname.split('/').pop();
-  if (route) {
-    route = route
-      .split('-')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
-  }
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <SidebarProvider>
+    <div className="flex h-screen bg-zinc-900">
       <AppSidebar />
-      <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
-          <SidebarTrigger className="-ml-1" />
-          <Separator orientation="vertical" className="mr-2 h-4" />
-          {route}
-        </header>
-        {children}
-      </SidebarInset>
-    </SidebarProvider>
+      <div className="flex min-h-screen flex-1 flex-col">
+        <Header />
+        <main className="flex-1 overflow-y-auto overflow-x-hidden bg-zinc-900">
+          <div className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
+            {children}
+          </div>
+        </main>
+      </div>
+    </div>
   );
 }
