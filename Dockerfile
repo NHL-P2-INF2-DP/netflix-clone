@@ -22,4 +22,6 @@ COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 
 EXPOSE 3000
+
+# Use wait-for-it to wait for PostgreSQL, seed the database, and start the server
 CMD ["bun", "run", "server.js"]
