@@ -16,7 +16,6 @@ FROM oven/bun:alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 
-# Add this line to copy the generated Prisma client
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static

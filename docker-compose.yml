@@ -9,6 +9,9 @@ services:
       - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
       - BETTER_AUTH_URL=${BETTER_AUTH_URL}
     restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
     healthcheck:
       test: [CMD-SHELL, 'curl -f http://localhost:3000/api/health || exit 1']
       interval: 1m30s
