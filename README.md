@@ -88,6 +88,41 @@ docker-compose up --build
 
 The application and the PostgreSQL database will now be running. The application will be accessible at [http://localhost:3000](http://localhost:3000).
 
+## 🔄 Database Backup System
+
+The project includes an automatic backup system for the PostgreSQL database.
+
+### Automatic Backups
+- Backups are created automatically every 4 hours
+- The system keeps the last 5 backups plus a `latest.sql` file
+- Backups are stored in the `./backups` directory
+- On startup, the system attempts to restore from the latest backup if one exists
+
+### Manual Operations
+You can manually trigger backup and restore operations:
+
+```bash
+# Create a backup
+docker-compose exec -T backup-service ./backup-service.sh create_backup
+
+# Restore from latest backup
+docker-compose exec -T backup-service ./backup-service.sh restore_from_backup
+```
+
+The `-T` flag makes the command run non-interactively (returns to prompt after completion).
+
+### Backup Files
+- Latest backup: `./backups/latest.sql`
+- Timestamped backups: `./backups/backup_YYYYMMDD_HHMMSS.sql`
+
+### Important Notes
+- The backup service runs automatically in the background
+- Manual operations don't interrupt the automatic backup schedule
+- Restoring will completely replace the current database with the backup
+- Make sure to backup before any major changes
+
+## Default Login Credentials
+
 You will be able to login with the following credentials:
 
 - Email: `junior@demo.com`
