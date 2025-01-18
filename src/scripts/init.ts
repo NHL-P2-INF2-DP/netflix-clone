@@ -17,7 +17,7 @@ const pool = new Pool({
   host: `postgres`,
   database: `${process.env.POSTGRES_DB}`,
   password: `${process.env.POSTGRES_PASSWORD}`,
-  port: Number.parseInt(process.env.POSTGRES_PORT || '5432'),
+  port: '5432',
 });
 
 // Fixed password for all accounts
