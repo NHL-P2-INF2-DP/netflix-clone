@@ -1,6 +1,5 @@
 import type { NextRequest } from 'next/server';
 
-import { Role } from '@prisma/client';
 import { headers } from 'next/headers';
 
 import { logger } from '@/lib/pinologger';
@@ -17,31 +16,31 @@ export abstract class AuthenticationService {
    */
   static async getSession(headers: Headers): Promise<Session | null> {
     const session = await auth.api.getSession({ headers });
-    // return session;
+    return session;
 
-    // mock Authentication
-    return {
-      user: {
-        id: '1',
-        email: '1',
-        name: '1',
-        role: Role.JUNIOR,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        emailVerified: true,
-      },
-      session: {
-        id: '1',
-        expiresAt: new Date(),
-        userId: '1',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        token: 'adwald',
-        ipAddress: '127.0.0.1',
-        userAgent:
-          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/38.0.101.76 Safari/537.36',
-      },
-    };
+    // // mock Authentication
+    // return {
+    //   user: {
+    //     id: '1',
+    //     email: '1',
+    //     name: '1',
+    //     role: Role.JUNIOR,
+    //     createdAt: new Date(),
+    //     updatedAt: new Date(),
+    //     emailVerified: true,
+    //   },
+    //   session: {
+    //     id: '1',
+    //     expiresAt: new Date(),
+    //     userId: '1',
+    //     createdAt: new Date(),
+    //     updatedAt: new Date(),
+    //     token: 'adwald',
+    //     ipAddress: '127.0.0.1',
+    //     userAgent:
+    //       'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/38.0.101.76 Safari/537.36',
+    //   },
+    // };
   }
 
   /**
