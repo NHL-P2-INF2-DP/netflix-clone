@@ -83,7 +83,7 @@ cp .env.example .env
 3. Start the Docker containers:
 
 ```bash
-docker-compose up
+docker-compose up --build
 ```
 
 The application and the PostgreSQL database will now be running. The application will be accessible at [http://localhost:3000](http://localhost:3000).
