@@ -18,6 +18,7 @@ export default function page() {
     <div>
       <h1 className="text-xl font-bold">
         Welcome to the dashboard,
+        {' '}
         {session.user.name}
         !
       </h1>
