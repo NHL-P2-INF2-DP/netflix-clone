@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "prisma generate && next build",
-    "start": "bun run init.ts && bun run server.js",
+    "start": "bun run server.js",
     "lint": "eslint .",
     "lint:fix": "eslint \"src/**/*.{ts,tsx}\" --fix",
     "format": "prettier --write .",
@@ -63,6 +63,9 @@
     "zod": "^3.24.1",
     "zod-prisma-types": "^3.2.1",
     "zod-to-json-schema": "^3.22.3"
+  },
+  "prisma": {
+    "schema": "prisma/schema.prisma"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^3.9.1",
