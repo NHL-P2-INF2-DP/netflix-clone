@@ -1,241 +1,270 @@
 /* eslint-disable no-console */
-// This file is used to add the initial data to the database.
-// it will create mock data for the database and it will create a demo user with a random avatar using an external API.
+/* eslint-disable node/prefer-global/buffer */
+/* eslint-disable node/no-process-env */
 
-import { AgeRating, ContentType, PaymentStatus, Role } from '@prisma/client';
-import { hash } from 'bcryptjs';
-import { Buffer } from 'node:buffer';
+import { config } from 'dotenv';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import { Pool } from 'pg';
+import { v4 as uuidv4 } from 'uuid';
 
-import prisma from '@/lib/prisma';
+// Load environment variables
+config();
+
+// Database connection configuration
+const pool = new Pool({
+  user: `${process.env.POSTGRES_USER}`,
+  host: `postgres`,
+  database: `${process.env.POSTGRES_DB}`,
+  password: `${process.env.POSTGRES_PASSWORD}`,
+  port: Number.parseInt(process.env.POSTGRES_PORT || '5432'),
+});
+
+// Fixed password for all accounts
+const FIXED_PASSWORD = 'a9e36c7b6f60d4a1a43e742c90b7f841:965379b6df85e8c653d584277813e4216bb56929eeafb73439ebe198a7de315196eb3e67056260fd808944b7098c19a9b7c8f4479b5c4af48657896d05b44a0d';
+
+// Pre-generate UUIDs for relationships
+const ids = {
+  genres: {
+    action: uuidv4(),
+    comedy: uuidv4(),
+    drama: uuidv4(),
+    sciFi: uuidv4(),
+  },
+  languages: {
+    english: uuidv4(),
+    spanish: uuidv4(),
+    french: uuidv4(),
+  },
+  contentRatings: {
+    hd: uuidv4(),
+    fourK: uuidv4(),
+    eightK: uuidv4(),
+  },
+  subscriptionTypes: {
+    basic: uuidv4(),
+    premium: uuidv4(),
+  },
+};
 
 async function main() {
   console.log('🌱 Starting database seeding...');
+  const client = await pool.connect();
 
-  // check if the database is already seeded
-  const user = await prisma.user.findFirst();
-  if (user) {
-    console.log('🌱 Database already seeded!');
-    return;
+  try {
+    // Generate avatars
+    const avatars = await Promise.all([
+      generateAvatar(Math.random().toString(36).substring(2, 15)),
+      generateAvatar(Math.random().toString(36).substring(2, 15)),
+      generateAvatar(Math.random().toString(36).substring(2, 15)),
+    ]);
+
+    // Start transaction
+    await client.query('BEGIN');
+
+    // Get latest Prisma schema
+    const schema = await getLatestPrismaSchema();
+    await client.query(schema);
+
+    // Enable UUID extension
+    await client.query('CREATE EXTENSION IF NOT EXISTS "uuid-ossp"');
+
+    // Check if database is already seeded
+    const existingData = await client.query('SELECT 1 FROM "Genre" LIMIT 1');
+    if (existingData.rows.length > 0) {
+      console.log('Database already seeded!');
+      await client.query('COMMIT');
+      return;
+    }
+
+    // Create Genres
+    await client.query(`
+      INSERT INTO "Genre" (id, name) VALUES
+        ($1, 'Action'),
+        ($2, 'Comedy'),
+        ($3, 'Drama'),
+        ($4, 'Sci-Fi')
+    `, [ids.genres.action, ids.genres.comedy, ids.genres.drama, ids.genres.sciFi]);
+
+    // Create Languages
+    await client.query(`
+      INSERT INTO "Language" (id, language) VALUES
+        ($1, 'English'),
+        ($2, 'Spanish'),
+        ($3, 'French')
+    `, [ids.languages.english, ids.languages.spanish, ids.languages.french]);
+
+    // Create Content Ratings
+    await client.query(`
+      INSERT INTO "ContentRating" (id, rating_type) VALUES
+        ($1, 'HD'),
+        ($2, '4K'),
+        ($3, '8K')
+    `, [ids.contentRatings.hd, ids.contentRatings.fourK, ids.contentRatings.eightK]);
+
+    // Create Subscription Types
+    await client.query(`
+      INSERT INTO "SubscriptionType" (id, type, price_in_euro_cents) VALUES
+        ($1, 'Basic', 799),
+        ($2, 'Premium', 1299)
+    `, [ids.subscriptionTypes.basic, ids.subscriptionTypes.premium]);
+
+    // Create Demo Netflix Account
+    const demoAccount = await client.query(`
+      INSERT INTO "NetflixAccount" (
+        id,
+        email,
+        password,
+        activated,
+        created_at,
+        updated_at
+      ) VALUES (
+        uuid_generate_v4(),
+        $1,
+        $2,
+        true,
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+      ) RETURNING id
+    `, ['demo@example.com', FIXED_PASSWORD]);
+
+    // Create Profile for Demo Account
+    await client.query(`
+      INSERT INTO "Profile" (
+        id,
+        account_id,
+        name,
+        date_of_birth,
+        language,
+        profile_image,
+        created_at,
+        updated_at
+      ) VALUES (
+        uuid_generate_v4(),
+        $1,
+        'Demo User',
+        '1990-01-01'::date,
+        'en',
+        'https://example.com/default-avatar.png',
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+      )
+    `, [demoAccount.rows[0].id]);
+
+    // Create Demo Content
+    const matrixId = uuidv4();
+    const inceptionId = uuidv4();
+    await client.query(`
+      INSERT INTO "Content" (
+        id,
+        title,
+        "durationInSeconds",
+        release_date,
+        created_at,
+        updated_at
+      ) VALUES
+        ($1, 'The Matrix', 8949, '1999-03-31', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+        ($2, 'Inception', 18949, '2010-07-16', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    `, [matrixId, inceptionId]);
+
+    // Create Content Metadata
+    await client.query(`
+      INSERT INTO "ContentMetadata" (
+        id,
+        content_id,
+        content_type,
+        age_rating,
+        genre_id,
+        language_id,
+        content_rating_id,
+        rating,
+        created_at,
+        updated_at
+      ) VALUES
+        (uuid_generate_v4(), $1, 'MOVIE', 'R', $3, $5, $6, 9, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+        (uuid_generate_v4(), $2, 'MOVIE', 'PG_13', $4, $5, $6, 9, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    `, [matrixId, inceptionId, ids.genres.sciFi, ids.genres.action, ids.languages.english, ids.contentRatings.fourK]);
+
+    // Create Demo Users
+    await client.query(`
+      INSERT INTO "user" (
+        id,
+        "emailVerified",
+        email,
+        name,
+        image,
+        role,
+        "createdAt",
+        "updatedAt"
+      ) VALUES
+        ('tOIdEhJiSiCxUCKRkfHHn', true, 'junior@demo.com', 'Junior User', $1, 'JUNIOR', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+        ('rkKWxWd7pfRgmnBHiKxZI', true, 'medior@demo.com', 'Medior User', $2, 'MEDIOR', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+        ('pe07ggzx_CkCi6Or2bph1', true, 'senior@demo.com', 'Senior User', $3, 'SENIOR', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    `, avatars);
+
+    // Create Demo Accounts
+    await client.query(`
+      INSERT INTO "account" (
+        id,
+        "accountId",
+        "providerId",
+        "userId",
+        password,
+        "createdAt",
+        "updatedAt"
+      ) VALUES
+        (substr(md5(random()::text), 0, 15), 'tOIdEhJiSiCxUCKRkfHHn', 'credential', 'tOIdEhJiSiCxUCKRkfHHn',
+         $1,
+         CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+        (substr(md5(random()::text), 0, 15), 'rkKWxWd7pfRgmnBHiKxZI', 'credential', 'rkKWxWd7pfRgmnBHiKxZI',
+         $1,
+         CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+        (substr(md5(random()::text), 0, 15), 'pe07ggzx_CkCi6Or2bph1', 'credential', 'pe07ggzx_CkCi6Or2bph1',
+         $1,
+         CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    `, [FIXED_PASSWORD]);
+
+    // Commit transaction
+    await client.query('COMMIT');
+    console.log('✅ Database seeding completed!');
   }
-
-  // Create Genres
-  const genres = await Promise.all([
-    prisma.genre.create({ data: { name: 'Action' } }),
-    prisma.genre.create({ data: { name: 'Comedy' } }),
-    prisma.genre.create({ data: { name: 'Drama' } }),
-    prisma.genre.create({ data: { name: 'Sci-Fi' } }),
-  ]);
-
-  // Create Languages
-  const languages = await Promise.all([
-    prisma.language.create({ data: { language: 'English' } }),
-    prisma.language.create({ data: { language: 'Spanish' } }),
-    prisma.language.create({ data: { language: 'French' } }),
-  ]);
-
-  // Create Content Ratings
-  const contentRatings = await Promise.all([
-    prisma.contentRating.create({ data: { ratingType: 'HD' } }),
-    prisma.contentRating.create({ data: { ratingType: '4K' } }),
-    prisma.contentRating.create({ data: { ratingType: '8K' } }),
-  ]);
-
-  // Create Subscription Types
-  const subscriptionTypes = await Promise.all([
-    prisma.subscriptionType.create({
-      data: {
-        type: 'Basic',
-        priceInEuroCents: 799,
-      },
-    }),
-    prisma.subscriptionType.create({
-      data: {
-        type: 'Premium',
-        priceInEuroCents: 1299,
-      },
-    }),
-  ]);
-
-  // Create Demo Netflix Account
-  const demoAccount = await prisma.netflixAccount.create({
-    data: {
-      email: 'demo@example.com',
-      password: await hash('demo123', 10),
-      activated: true,
-    },
-  });
-
-  // Create Profile for Demo Account
-  const demoProfile = await prisma.profile.create({
-    data: {
-      accountId: demoAccount.id,
-      name: 'Demo User',
-      dateOfBirth: new Date('1990-01-01'),
-      language: 'en',
-      profileImage: 'https://example.com/default-avatar.png',
-    },
-  });
-
-  // Create Demo Subscription
-  const demoSubscription = await prisma.subscription.create({
-    data: {
-      accountId: demoAccount.id,
-      subscriptionTypeId: subscriptionTypes[1].id, // Premium
-      beginDate: new Date(),
-      endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
-    },
-  });
-
-  // Create Demo Invoice
-  await prisma.invoice.create({
-    data: {
-      subscriptionId: demoSubscription.id,
-      isPaid: PaymentStatus.PAID,
-    },
-  });
-
-  // Create Demo Content
-  const movies = await Promise.all([
-    prisma.content.create({
-      data: {
-        title: 'The Matrix',
-        durationInSeconds: 8949,
-        releaseDate: new Date('1999-03-31'),
-        ContentMetadata: {
-          create: {
-            contentType: ContentType.MOVIE,
-            ageRating: AgeRating.R,
-            genreId: genres[3].id, // Sci-Fi
-            languageId: languages[0].id, // English
-            contentRatingId: contentRatings[1].id, // 4K
-            rating: 9,
-          },
-        },
-      },
-    }),
-    prisma.content.create({
-      data: {
-        title: 'Inception',
-        durationInSeconds: 18949,
-        releaseDate: new Date('2010-07-16'),
-        ContentMetadata: {
-          create: {
-            contentType: ContentType.MOVIE,
-            ageRating: AgeRating.PG_13,
-            genreId: genres[0].id, // Action
-            languageId: languages[0].id, // English
-            contentRatingId: contentRatings[1].id, // 4K
-            rating: 9,
-          },
-        },
-      },
-    }),
-  ]);
-
-  // create a random 16 character string
-  const randomString = Math.random().toString(36).substring(2, 15);
-  const randomString2 = Math.random().toString(36).substring(2, 15);
-  const randomString3 = Math.random().toString(36).substring(2, 15);
-
-  const avatar = await fetch(
-    `https://api.dicebear.com/9.x/dylan/svg?seed=${randomString}`,
-  ).then(res => res.arrayBuffer());
-
-  const avatar2 = await fetch(
-    `https://api.dicebear.com/9.x/dylan/svg?seed=${randomString2}`,
-  ).then(res => res.arrayBuffer());
-
-  const avatar3 = await fetch(
-    `https://api.dicebear.com/9.x/dylan/svg?seed=${randomString3}`,
-  ).then(res => res.arrayBuffer());
-
-  const avatarBase64 = Buffer.from(avatar).toString('base64');
-  const avatar2Base64 = Buffer.from(avatar2).toString('base64');
-  const avatar3Base64 = Buffer.from(avatar3).toString('base64');
-
-  function getRandomID() {
-    return Math.random().toString(36).substring(2, 15);
+  catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Error seeding database:', error);
+    throw error;
   }
-
-  const newUser = await prisma.user.createMany({
-    data: [
-      {
-        id: 'tOIdEhJiSiCxUCKRkfHHn',
-        emailVerified: true,
-        email: 'junior@demo.com',
-        name: 'Junior User',
-        image: `data:image/svg+xml;base64,${avatarBase64}`,
-        role: Role.JUNIOR,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-      {
-        id: 'rkKWxWd7pfRgmnBHiKxZI',
-        emailVerified: true,
-        email: 'medior@demo.com',
-        name: 'Medior User',
-        image: `data:image/svg+xml;base64,${avatar2Base64}`,
-        role: Role.MEDIOR,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-      {
-        id: 'pe07ggzx_CkCi6Or2bph1',
-        emailVerified: true,
-        email: 'senior@demo.com',
-        name: 'Senior User',
-        image: `data:image/svg+xml;base64,${avatar3Base64}`,
-        role: Role.SENIOR,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-    ],
-  });
-
-  const newAccounts = await prisma.account.createMany({
-    data: [
-      {
-        id: getRandomID(),
-        accountId: 'tOIdEhJiSiCxUCKRkfHHn',
-        providerId: 'credential',
-        userId: 'tOIdEhJiSiCxUCKRkfHHn',
-        password:
-          'a9e36c7b6f60d4a1a43e742c90b7f841:965379b6df85e8c653d584277813e4216bb56929eeafb73439ebe198a7de315196eb3e67056260fd808944b7098c19a9b7c8f4479b5c4af48657896d05b44a0d',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-      {
-        id: getRandomID(),
-        accountId: 'rkKWxWd7pfRgmnBHiKxZI',
-        providerId: 'credential',
-        userId: 'rkKWxWd7pfRgmnBHiKxZI',
-        password:
-          'a9e36c7b6f60d4a1a43e742c90b7f841:965379b6df85e8c653d584277813e4216bb56929eeafb73439ebe198a7de315196eb3e67056260fd808944b7098c19a9b7c8f4479b5c4af48657896d05b44a0d',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-      {
-        id: getRandomID(),
-        accountId: 'pe07ggzx_CkCi6Or2bph1',
-        providerId: 'credential',
-        userId: 'pe07ggzx_CkCi6Or2bph1',
-        password:
-          'a9e36c7b6f60d4a1a43e742c90b7f841:965379b6df85e8c653d584277813e4216bb56929eeafb73439ebe198a7de315196eb3e67056260fd808944b7098c19a9b7c8f4479b5c4af48657896d05b44a0d',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-    ],
-  });
-
-  console.log('✅ Database seeding completed!');
+  finally {
+    client.release();
+    await pool.end();
+  }
 }
 
+async function generateAvatar(seed: string): Promise<string> {
+  try {
+    const response = await fetch(`https://api.dicebear.com/9.x/dylan/svg?seed=${seed}`);
+    const buffer = await response.arrayBuffer();
+    return `data:image/svg+xml;base64,${Buffer.from(buffer).toString('base64')}`;
+  }
+  catch (error) {
+    console.error('Error generating avatar:', error);
+    return 'https://example.com/default-avatar.png';
+  }
+}
+
+async function getLatestPrismaSchema() {
+  // get the latest migration file from /prisma/migrations
+  const migrationFiles = await fs.readdir(path.join(__dirname, './migrations'));
+  const latestMigration = migrationFiles.sort((a, b) => a.localeCompare(b))[0];
+
+  // get the schema from the latest migration file
+  const schema = await fs.readFile(path.join(__dirname, `./migrations/${latestMigration}/migration.sql`), 'utf-8');
+
+  return schema;
+}
+
+// Execute the seeding
 main()
-  .catch((e) => {
-    console.error('Error seeding database:', e);
+  .catch((error) => {
+    console.error('Failed to seed database:', error);
     process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-    process.exit(0);
   });
