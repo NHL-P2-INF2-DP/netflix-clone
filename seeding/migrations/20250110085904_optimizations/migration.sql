@@ -11,13 +11,6 @@ CREATE TYPE "AgeRating" AS ENUM ('G', 'PG', 'PG_13', 'R', 'NC_17');
 CREATE TYPE "PaymentStatus" AS ENUM ('PAID', 'UNPAID', 'PENDING');
 
 -- CreateTable
-CREATE TABLE "Genre" (
-    "id" TEXT NOT NULL,
-    "name" VARCHAR(50) NOT NULL,
-
-    CONSTRAINT "Genre_pkey" PRIMARY KEY ("id")
-);
-
 -- CreateTable
 CREATE TABLE "ContentRating" (
     "id" TEXT NOT NULL,
