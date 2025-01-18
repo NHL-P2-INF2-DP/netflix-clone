@@ -13,6 +13,8 @@ create_backup() {
         --if-exists \
         --no-owner \
         --no-privileges \
+        --no-comments \
+        --no-tablespaces \
         > $LATEST_BACKUP
     if [ $? -eq 0 ]; then
         echo "Backup created successfully at $(date)"
@@ -30,27 +32,27 @@ restore_from_backup() {
     if [ -f $LATEST_BACKUP ]; then
         echo "Found existing backup, checking if restore is needed..."
         
-        # Drop and recreate the database
-        echo "Dropping existing database..."
+        # First terminate all connections and drop database (outside transaction)
         PGPASSWORD=$POSTGRES_PASSWORD psql -h $POSTGRES_HOST -U $POSTGRES_USER -d postgres -c "
             SELECT pg_terminate_backend(pid) 
             FROM pg_stat_activity 
-            WHERE datname = '$POSTGRES_DB';
-            DROP DATABASE IF EXISTS $POSTGRES_DB;
-            CREATE DATABASE $POSTGRES_DB;
+            WHERE datname = '$POSTGRES_DB'
+            AND pid <> pg_backend_pid();
         "
         
+        # Drop and create database (must be done outside transaction)
+        PGPASSWORD=$POSTGRES_PASSWORD psql -h $POSTGRES_HOST -U $POSTGRES_USER -d postgres -c "DROP DATABASE IF EXISTS $POSTGRES_DB;"
+        PGPASSWORD=$POSTGRES_PASSWORD psql -h $POSTGRES_HOST -U $POSTGRES_USER -d postgres -c "CREATE DATABASE $POSTGRES_DB;"
+        
         echo "Restoring from backup..."
-        PGPASSWORD=$POSTGRES_PASSWORD psql -h $POSTGRES_HOST -U $POSTGRES_USER -d $POSTGRES_DB \
-            -v ON_ERROR_STOP=1 \
-            -X \
-            -q \
-            < $LATEST_BACKUP
+        # Remove transaction_timeout from the backup file before restoring
+        sed '/transaction_timeout/d' $LATEST_BACKUP | PGPASSWORD=$POSTGRES_PASSWORD psql -h $POSTGRES_HOST -U $POSTGRES_USER -d $POSTGRES_DB
+        
         if [ $? -eq 0 ]; then
             echo "Database restored successfully at $(date)"
         else
             echo "Database restore failed at $(date)"
-            exit 1
+            return 1
         fi
     else
         echo "No backup file found at $LATEST_BACKUP"
@@ -58,16 +60,6 @@ restore_from_backup() {
 }
 
 # Main execution
-if [ "$1" = "restore_from_backup" ]; then
-    # Wait for PostgreSQL to be ready
-    until PGPASSWORD=$POSTGRES_PASSWORD psql -h $POSTGRES_HOST -U $POSTGRES_USER -d postgres -c '\q' 2>/dev/null; do
-        echo "Waiting for PostgreSQL to be ready..."
-        sleep 5
-    done
-    restore_from_backup
-    exit 0
-fi
-
 echo "Starting backup service..."
 
 # Wait for PostgreSQL to be ready
@@ -76,7 +68,10 @@ until PGPASSWORD=$POSTGRES_PASSWORD psql -h $POSTGRES_HOST -U $POSTGRES_USER -d 
     sleep 5
 done
 
-restore_from_backup
+# Initial restore attempt
+if ! restore_from_backup; then
+    echo "Initial restore failed, continuing with backup service"
+fi
 
 # Then start the backup loop
 while true; do
