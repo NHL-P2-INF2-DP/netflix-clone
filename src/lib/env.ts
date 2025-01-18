@@ -1,13 +1,16 @@
-/* eslint-disable node/no-process-env */
 import { z } from 'zod';
+
+/* eslint-disable node/no-process-env */
 
 // Server-side only schema
 const envSchema = z.object({
   NODE_ENV: z.string().default('development'),
   PORT: z.coerce.number().default(3000),
-  DATABASE_URL: z.string(),
   BETTER_AUTH_SECRET: z.string(),
   BETTER_AUTH_URL: z.string(),
+  POSTGRES_USER: z.string(),
+  POSTGRES_PASSWORD: z.string(),
+  POSTGRES_DB: z.string(),
 });
 
 // Type for our env
