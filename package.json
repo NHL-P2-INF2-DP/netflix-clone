@@ -87,5 +87,18 @@
     "prisma": "^6.0.1",
     "tailwindcss": "^3.4.15",
     "typescript": "^5.6.3"
+  },
+  "lint-staged": {
+    "**/*.{js,jsx,ts,tsx}": [
+      "prettier --write",
+      "eslint"
+    ],
+    "**/*.css": [
+      "stylelint --fix",
+      "prettier --write"
+    ],
+    "**/*.json": [
+      "prettier --write"
+    ]
   }
 }
