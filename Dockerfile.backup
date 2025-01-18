@@ -1,0 +1,10 @@
+FROM alpine:latest
+
+RUN apk add --no-cache postgresql-client bash
+
+WORKDIR /app
+
+COPY scripts/backup-service.sh .
+RUN chmod +x backup-service.sh
+
+CMD ["./backup-service.sh"] 
