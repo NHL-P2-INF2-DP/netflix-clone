@@ -7,16 +7,17 @@ services:
       - NODE_ENV=production
     restart: always
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     healthcheck:
-      test: ['CMD-SHELL', 'curl -f http://localhost:3000/api/health || exit 1']
+      test: [CMD-SHELL, 'curl -f http://localhost:3000/api/health || exit 1']
       interval: 1m30s
       timeout: 30s
       retries: 5
       start_period: 30s
 
   postgres:
-    image: postgres:16
+    image: postgres:16-alpine
     restart: always
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
@@ -25,10 +26,13 @@ services:
     ports:
       - '5432:5432'
     volumes:
-      - ./data/postgres:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      test: [CMD-SHELL, pg_isready -U postgres]
       interval: 1m30s
       timeout: 30s
       retries: 5
       start_period: 30s
+
+volumes:
+  postgres-data:

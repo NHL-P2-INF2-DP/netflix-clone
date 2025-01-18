@@ -83,7 +83,21 @@ cp .env.example .env
 3. Start the Docker containers:
 
 ```bash
-docker-compose up
+docker-compose up --build
 ```
 
 The application and the PostgreSQL database will now be running. The application will be accessible at [http://localhost:3000](http://localhost:3000).
+
+You will be able to login with the following credentials:
+
+- Email: `junior@demo.com`
+- Password: `password123`
+- Role: `Junior`
+
+- Email: `medior@demo.com`
+- Password: `password123`
+- Role: `Medior`
+
+- Email: `senior@demo.com`
+- Password: `password123`
+- Role: `Senior`

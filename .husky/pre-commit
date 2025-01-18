@@ -1,8 +1,0 @@
-# .husky/pre-commit
-if git diff --cached --name-only --diff-filter=ACMR | grep -qE '^\.env$|^\.env\.local$'; then
-  echo ".env or .env.local file found in commit, please remove it"
-  exit 1
-fi
-prettier $(git diff --cached --name-only --diff-filter=ACMR | sed 's| |\\ |g' | grep -v '^\.husky/') --write --ignore-unknown
-bun run lint:fix
-git update-index --again
