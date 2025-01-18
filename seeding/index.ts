@@ -62,15 +62,32 @@ async function main() {
     // Start transaction
     await client.query('BEGIN');
 
-    // Get latest Prisma schema
-    const schema = await getLatestPrismaSchema();
-    await client.query(schema);
+    // add the Genre table if it doesn't exist
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS "Genre" (
+        id TEXT NOT NULL,
+        name VARCHAR(50) NOT NULL,
+        CONSTRAINT "Genre_pkey" PRIMARY KEY ("id")
+      )
+    `);
+
+    // check if the database is already seeded
+    const user = await client.query('SELECT * FROM "Genre" LIMIT 1');
+    if (user.rows.length > 0) {
+      console.log('Database already seeded!');
+      await client.query('COMMIT');
+      return;
+    }
+    else {
+      const schema = await getLatestPrismaSchema();
+      await client.query(schema);
+    }
 
     // Enable UUID extension
     await client.query('CREATE EXTENSION IF NOT EXISTS "uuid-ossp"');
 
     // Check if database is already seeded
-    const existingData = await client.query('SELECT 1 FROM "Genre" LIMIT 1');
+    const existingData = await client.query('SELECT * FROM "Genre" LIMIT 1');
     if (existingData.rows.length > 0) {
       console.log('Database already seeded!');
       await client.query('COMMIT');
