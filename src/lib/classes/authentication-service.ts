@@ -1,6 +1,5 @@
 import type { NextRequest } from 'next/server';
 
-import { Role } from '@prisma/client';
 import { headers } from 'next/headers';
 
 import { logger } from '@/lib/pinologger';
