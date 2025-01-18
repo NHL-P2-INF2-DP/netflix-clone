@@ -435,6 +435,7 @@ export default function DynamicTable({
                   {Math.min(currentPage * itemsPerPage, totalItems)}
                   {' '}
                   of
+                  {' '}
                   {totalItems}
                   {' '}
                   entries
