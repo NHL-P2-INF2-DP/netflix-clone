@@ -20,7 +20,7 @@ export default function LoginPage() {
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors, isLoading },
   } = useForm({
     resolver: zodResolver(
       z.object({
@@ -68,7 +68,7 @@ export default function LoginPage() {
                 </Label>
                 <Input
                   id="email"
-                  disabled={isSubmitting}
+                  disabled={isLoading}
                   type="text"
                   {...register('email')}
                   required
@@ -92,7 +92,7 @@ export default function LoginPage() {
                 </Label>
                 <Input
                   id="password"
-                  disabled={isSubmitting}
+                  disabled={isLoading}
                   type="password"
                   {...register('password')}
                   required
@@ -111,10 +111,10 @@ export default function LoginPage() {
             </div>
             <Button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isLoading}
               className="mt-6 w-full bg-red-600 text-white hover:bg-red-700"
             >
-              {isSubmitting ? 'Loading...' : 'Sign In'}
+              {isLoading ? 'Loading...' : 'Sign In'}
             </Button>
           </form>
         </CardContent>
