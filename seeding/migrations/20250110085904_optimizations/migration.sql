@@ -222,14 +222,14 @@ CREATE TABLE "verification" (
 );
 
 -- CreateTable
-CREATE TABLE "ApiKey" (
+CREATE TABLE "api_key" (
     "id" TEXT NOT NULL,
-    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" TIMESTAMP(3) NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
     "user_id" TEXT NOT NULL,
-    "api_key" TEXT NOT NULL,
+    "apiKey" TEXT NOT NULL,
 
-    CONSTRAINT "apiKey_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "api_key_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -278,12 +278,6 @@ CREATE INDEX "PreviousPasswordHash_account_id_created_at_idx" ON "PreviousPasswo
 CREATE INDEX "Profile_account_id_name_idx" ON "Profile"("account_id", "name");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "apiKey_user_id_key" ON "apiKey"("user_id");
-
--- CreateIndex
-CREATE UNIQUE INDEX "apiKey_api_key_key" ON "apiKey"("api_key");
-
--- CreateIndex
 CREATE UNIQUE INDEX "SubscriptionType_type_key" ON "SubscriptionType"("type");
 
 -- CreateIndex
@@ -315,6 +309,12 @@ CREATE UNIQUE INDEX "user_email_key" ON "user"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "session_token_key" ON "session"("token");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "api_key_user_id_key" ON "api_key"("user_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "api_key_apiKey_key" ON "api_key"("apiKey");
 
 -- AddForeignKey
 ALTER TABLE "Subtitle" ADD CONSTRAINT "Subtitle_language_id_fkey" FOREIGN KEY ("language_id") REFERENCES "Language"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -371,4 +371,4 @@ ALTER TABLE "session" ADD CONSTRAINT "session_userId_fkey" FOREIGN KEY ("userId"
 ALTER TABLE "account" ADD CONSTRAINT "account_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "apiKey" ADD CONSTRAINT "apiKey_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "api_key" ADD CONSTRAINT "api_key_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
