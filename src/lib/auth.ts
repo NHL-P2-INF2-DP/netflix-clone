@@ -1,7 +1,7 @@
 import { Role } from '@prisma/client';
 import { betterAuth } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
-import { bearer, jwt } from 'better-auth/plugins';
+import { nextCookies } from 'better-auth/next-js';
 
 import prisma from './prisma';
 
@@ -25,7 +25,9 @@ export const auth = betterAuth({
 
   trustedOrigins: ['http://localhost:3000'],
 
-  plugins: [jwt(), bearer()],
+  plugins: [nextCookies()],
 });
 
 export type Session = typeof auth.$Infer.Session;
+
+export type User = typeof auth.$Infer.Session['user'];

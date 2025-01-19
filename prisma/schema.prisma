@@ -242,6 +242,7 @@ model User {
   updatedAt     DateTime
   sessions      Session[]
   accounts      Account[]
+  apiKey        apiKey?
 
   @@unique([email])
   @@map("user")
@@ -292,11 +293,13 @@ model Verification {
   @@map("verification")
 }
 
-model Jwks {
-  id         String   @id
-  publicKey  String
-  privateKey String
-  createdAt  DateTime
+model apiKey {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  @@map("jwks")
+  userId String @unique @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  apiKey String @unique @default(cuid()) @map("api_key")
 }
