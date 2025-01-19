@@ -81,8 +81,8 @@ async function generateOpenAPISpec(): Promise<OpenAPIObject> {
     ],
     security: [
       {
-        BearerAuth: []
-      }
+        BearerAuth: [],
+      },
     ],
     tags: [
       ...Object.entries(routeConfigurations)
@@ -243,7 +243,7 @@ async function generateOpenAPISpec(): Promise<OpenAPIObject> {
           BearerAuth: {
             type: 'http',
             scheme: 'bearer',
-            bearerFormat: "JWT",
+            bearerFormat: 'JWT',
           },
         },
       },
