@@ -242,7 +242,7 @@ model User {
   updatedAt     DateTime
   sessions      Session[]
   accounts      Account[]
-  apiKey        apiKey?
+  api_key        ApiKey?
 
   @@unique([email])
   @@map("user")
@@ -293,7 +293,7 @@ model Verification {
   @@map("verification")
 }
 
-model apiKey {
+model ApiKey {
   id        String   @id @default(uuid())
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -301,5 +301,6 @@ model apiKey {
   userId String @unique @map("user_id")
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  apiKey String @unique @default(cuid()) @map("api_key")
+  apiKey String @unique @default(cuid())
+  @@map("api_key")
 }

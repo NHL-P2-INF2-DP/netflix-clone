@@ -307,36 +307,17 @@ async function main() {
     `, avatars);
 
     await client.query(`
-        INSERT INTO "apiKey" (
-    id,
-    created_at,
-    updated_at,
-    user_id,
-    api_key
-) VALUES
-    (
-        'tOIdEhJiSiCxUCKRdkfHn',
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP,
-        'tOIdEhJiSiCxUCKRkfHHn',
-        'cm63wlsus00020cl29tgs5o7v'
-    ),
-    (
-        'rkKWxWd7pfRgmnBHiKxZI',
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP,
-        'rkKWxWd7pfRgmnBHiKxZI', 
-        'cm63wet2f00000cl2cyhzdviq'
-    ), 
-    (
-        'pe07ggzx_CkCi6Or2bph1',
-        CURRENT_TIMESTAMP,
-        CURRENT_TIMESTAMP,
-        'pe07ggzx_CkCi6Or2bph1',
-        'cm63wly9e00030cl2d0bpdzox'
-    );
-
-    `)
+      INSERT INTO "api_key" (
+        "id",
+        "user_id",
+        "apiKey",
+        "created_at",
+        "updated_at"
+      ) VALUES 
+        ('tOIdEhJiSiCxUCKRawddkfHn', 'tOIdEhJiSiCxUCKRkfHHn', 'cm63wlsus00020cl29tgs5o7v', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+        ('rkKWxWd7pfRgmnBHiKxZI', 'rkKWxWd7pfRgmnBHiKxZI', 'cm63wet2f00000cl2cyhzdviq', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+        ('pe07ggzx_CkCi6aOr2bph1','pe07ggzx_CkCi6Or2bph1', 'cm63wly9e00030cl2d0bpdzox', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    `);
 
     // Create Demo Accounts
     await client.query(`
