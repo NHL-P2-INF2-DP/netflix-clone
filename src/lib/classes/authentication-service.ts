@@ -39,7 +39,7 @@ export abstract class AuthenticationService {
 
     const user = await prisma.user.findFirst({
       where: {
-        apiKey: {
+        api_key: {
           apiKey: bearerToken,
         },
       },

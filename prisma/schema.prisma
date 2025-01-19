@@ -242,7 +242,7 @@ model User {
   updatedAt     DateTime
   sessions      Session[]
   accounts      Account[]
-  apiKey        ApiKey?
+  api_key        ApiKey?
 
   @@unique([email])
   @@map("user")
@@ -295,8 +295,8 @@ model Verification {
 
 model ApiKey {
   id        String   @id @default(uuid())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt 
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   userId String @unique @map("user_id")
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
