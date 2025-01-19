@@ -11,7 +11,6 @@ CREATE TYPE "AgeRating" AS ENUM ('G', 'PG', 'PG_13', 'R', 'NC_17');
 CREATE TYPE "PaymentStatus" AS ENUM ('PAID', 'UNPAID', 'PENDING');
 
 -- CreateTable
--- CreateTable
 CREATE TABLE "ContentRating" (
     "id" TEXT NOT NULL,
     "rating_type" VARCHAR(20) NOT NULL,
@@ -223,13 +222,14 @@ CREATE TABLE "verification" (
 );
 
 -- CreateTable
-CREATE TABLE "jwks" (
+CREATE TABLE "apiKey" (
     "id" TEXT NOT NULL,
-    "publicKey" TEXT NOT NULL,
-    "privateKey" TEXT NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+    "user_id" TEXT NOT NULL,
+    "api_key" TEXT NOT NULL,
 
-    CONSTRAINT "jwks_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "apiKey_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -276,6 +276,12 @@ CREATE INDEX "PreviousPasswordHash_account_id_created_at_idx" ON "PreviousPasswo
 
 -- CreateIndex
 CREATE INDEX "Profile_account_id_name_idx" ON "Profile"("account_id", "name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "apiKey_user_id_key" ON "apiKey"("user_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "apiKey_api_key_key" ON "apiKey"("api_key");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "SubscriptionType_type_key" ON "SubscriptionType"("type");
@@ -363,3 +369,6 @@ ALTER TABLE "session" ADD CONSTRAINT "session_userId_fkey" FOREIGN KEY ("userId"
 
 -- AddForeignKey
 ALTER TABLE "account" ADD CONSTRAINT "account_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "apiKey" ADD CONSTRAINT "apiKey_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
