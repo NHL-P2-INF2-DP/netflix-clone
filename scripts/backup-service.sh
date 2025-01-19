@@ -10,19 +10,19 @@ check_backup_validity() {
     if [ ! -f "$LATEST_BACKUP" ]; then
         echo "No backup file exists"
         return 1
-    }
+    fi
 
     # Check file size (greater than 1KB)
     if [ $(stat -f%z "$LATEST_BACKUP" 2>/dev/null || stat -c%s "$LATEST_BACKUP") -lt 1024 ]; then
         echo "Backup file is too small, likely empty or corrupted"
         return 1
-    }
+    fi
 
     # Check if file contains actual SQL commands
     if ! grep -q 'CREATE TABLE\|INSERT INTO' "$LATEST_BACKUP"; then
         echo "Backup file doesn't contain valid SQL commands"
         return 1
-    }
+    fi
 
     return 0
 }
