@@ -11,7 +11,7 @@ import { v4 as uuidv4 } from 'uuid';
 // Load environment variables
 config();
 
-// Database connection configuration
+// Single database pool configuration
 const pool = new Pool({
   user: `${process.env.POSTGRES_USER}`,
   host: `postgres`,
@@ -93,6 +93,93 @@ async function main() {
       await client.query('COMMIT');
       return;
     }
+
+    // Create database users
+    console.log('🔑 Creating database users...');
+    await client.query(`
+      DO $$ 
+      BEGIN
+        DROP USER IF EXISTS api_user;
+        DROP USER IF EXISTS senior_user;
+        DROP USER IF EXISTS medior_user;
+        DROP USER IF EXISTS junior_user;
+
+        CREATE USER api_user WITH PASSWORD 'api_password';
+        CREATE USER senior_user WITH PASSWORD 'senior_password';
+        CREATE USER medior_user WITH PASSWORD 'medior_password';
+        CREATE USER junior_user WITH PASSWORD 'junior_password';
+
+        REVOKE ALL PRIVILEGES ON ALL TABLES IN SCHEMA public FROM api_user, senior_user, medior_user, junior_user;
+        REVOKE ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public FROM api_user, senior_user, medior_user, junior_user;
+        REVOKE ALL PRIVILEGES ON ALL FUNCTIONS IN SCHEMA public FROM api_user, senior_user, medior_user, junior_user;
+        REVOKE ALL PRIVILEGES ON ALL ROUTINES IN SCHEMA public FROM api_user, senior_user, medior_user, junior_user;
+        REVOKE ALL PRIVILEGES ON SCHEMA public FROM api_user, senior_user, medior_user, junior_user;
+        REVOKE ALL PRIVILEGES ON DATABASE "${process.env.POSTGRES_DB}" FROM api_user, senior_user, medior_user, junior_user;
+
+        GRANT CONNECT ON DATABASE "${process.env.POSTGRES_DB}" TO api_user;
+        GRANT USAGE ON SCHEMA public TO api_user;
+        GRANT ALL PRIVILEGES ON ALL FUNCTIONS IN SCHEMA public TO api_user;
+        GRANT ALL PRIVILEGES ON ALL ROUTINES IN SCHEMA public TO api_user;
+        ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON FUNCTIONS TO api_user;
+        ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON ROUTINES TO api_user;
+
+        GRANT ALL PRIVILEGES ON DATABASE "${process.env.POSTGRES_DB}" TO senior_user;
+        GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO senior_user;
+        GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO senior_user;
+        GRANT ALL PRIVILEGES ON ALL FUNCTIONS IN SCHEMA public TO senior_user;
+
+        GRANT CONNECT ON DATABASE "${process.env.POSTGRES_DB}" TO medior_user;
+        GRANT USAGE ON SCHEMA public TO medior_user;
+        GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO medior_user;
+        REVOKE ALL PRIVILEGES ON "Invoice" FROM medior_user;
+        REVOKE ALL PRIVILEGES ON "SubscriptionType" FROM medior_user;
+        REVOKE ALL PRIVILEGES ON "Subscription" FROM medior_user;
+
+        GRANT CONNECT ON DATABASE "${process.env.POSTGRES_DB}" TO junior_user;
+        GRANT USAGE ON SCHEMA public TO junior_user;
+        GRANT SELECT, INSERT, UPDATE, DELETE ON "Content" TO junior_user;
+        GRANT SELECT, INSERT, UPDATE, DELETE ON "ContentMetadata" TO junior_user;
+        GRANT SELECT, INSERT, UPDATE, DELETE ON "Genre" TO junior_user;
+        GRANT SELECT, INSERT, UPDATE, DELETE ON "Language" TO junior_user;
+        GRANT SELECT, INSERT, UPDATE, DELETE ON "Subtitle" TO junior_user;
+        GRANT SELECT, INSERT, UPDATE, DELETE ON "ContentRating" TO junior_user;
+        GRANT SELECT, INSERT, UPDATE, DELETE ON "ViewingHistory" TO junior_user;
+        GRANT SELECT, INSERT, UPDATE, DELETE ON "Watchlist" TO junior_user;
+      END $$;
+    `);
+
+    // Create stored procedures
+    console.log('📦 Creating stored procedures...');
+    await client.query(`
+      CREATE OR REPLACE PROCEDURE fetch_data()
+      LANGUAGE plpgsql
+      AS $$
+      DECLARE
+          v_table_name TEXT;
+      BEGIN
+          EXECUTE format('SET session_replication_role = ''replica''');
+          FOR v_table_name IN 
+              SELECT table_name
+              FROM information_schema.tables
+              WHERE table_schema = 'public'
+              AND table_type = 'BASE TABLE'
+              ORDER BY table_name DESC
+          LOOP
+              EXECUTE format('DROP TABLE IF EXISTS %I.%I CASCADE', 'public', v_table_name);
+          END LOOP;
+          EXECUTE format('SET session_replication_role = ''origin''');
+      END;
+      $$;
+    `);
+
+    // Grant function privileges to api_user after creating the procedure
+    await client.query(`
+      DO $$ 
+      BEGIN
+        GRANT ALL PRIVILEGES ON ALL FUNCTIONS IN SCHEMA public TO api_user;
+        ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON FUNCTIONS TO api_user;
+      END $$;
+    `);
 
     // Create Genres
     await client.query(`
@@ -252,7 +339,6 @@ async function main() {
   }
   finally {
     client.release();
-    await pool.end();
   }
 }
 
@@ -281,7 +367,15 @@ async function getLatestPrismaSchema() {
 
 // Execute the seeding
 main()
+  .then(() => {
+    pool.end().then(() => {
+      console.log('✅ All database operations completed successfully!');
+      process.exit(0); // Exit with success code
+    });
+  })
   .catch((error) => {
     console.error('Failed to seed database:', error);
-    process.exit(1);
+    pool.end().then(() => {
+      process.exit(1); // Exit with error code
+    });
   });
