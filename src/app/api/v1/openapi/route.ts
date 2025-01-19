@@ -28,6 +28,9 @@ interface OpenAPIObject {
     url: string;
     description?: string;
   }>;
+  security?: Array<{
+    BearerAuth: Array<string>;
+  }>;
   tags?: Array<{
     name: string;
     description?: string;
@@ -39,7 +42,6 @@ interface OpenAPIObject {
   };
 }
 
-// Add missing error types
 interface OpenAPIError {
   message: string;
   details?: Array<{
@@ -75,6 +77,11 @@ async function generateOpenAPISpec(): Promise<OpenAPIObject> {
       {
         url: '/api/v1',
         description: 'API v1',
+      },
+    ],
+    security: [
+      {
+        BearerAuth: [],
       },
     ],
     tags: [
@@ -232,6 +239,13 @@ async function generateOpenAPISpec(): Promise<OpenAPIObject> {
             },
           },
         },
+        securitySchemes: {
+          BearerAuth: {
+            type: 'http',
+            scheme: 'bearer',
+            bearerFormat: 'JWT',
+          },
+        },
       },
     },
   };
@@ -269,6 +283,7 @@ async function generateOpenAPISpec(): Promise<OpenAPIObject> {
       get: {
         tags: [modelName],
         summary: `Get all ${config.routeName}`,
+        security: [{ BearerAuth: [] }],
         parameters: [
           ...commonParameters,
           {
@@ -329,6 +344,7 @@ async function generateOpenAPISpec(): Promise<OpenAPIObject> {
     spec.paths[routePath].post = {
       tags: [modelName],
       summary: `Create new ${config.routeName}`,
+      security: [{ BearerAuth: [] }],
       requestBody: {
         required: true,
         content: {
@@ -378,6 +394,7 @@ async function generateOpenAPISpec(): Promise<OpenAPIObject> {
       get: {
         tags: [modelName],
         summary: `Get ${config.routeName} by ID`,
+        security: [{ BearerAuth: [] }],
         parameters: [
           ...commonParameters,
           {
@@ -411,6 +428,7 @@ async function generateOpenAPISpec(): Promise<OpenAPIObject> {
       put: {
         tags: [modelName],
         summary: `Update ${config.routeName}`,
+        security: [{ BearerAuth: [] }],
         parameters: [
           ...commonParameters,
           {
@@ -468,6 +486,7 @@ async function generateOpenAPISpec(): Promise<OpenAPIObject> {
       delete: {
         tags: [modelName],
         summary: `Delete ${config.routeName}`,
+        security: [{ BearerAuth: [] }],
         parameters: [
           ...commonParameters,
           {

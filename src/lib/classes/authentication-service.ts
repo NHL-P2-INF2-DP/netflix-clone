@@ -1,12 +1,16 @@
+import type { User as PrismaUser, User } from '@prisma/client';
 import type { NextRequest } from 'next/server';
 
 import { headers } from 'next/headers';
+
+import type { User as BetterAuthUser } from '@/lib/auth';
 
 import { logger } from '@/lib/pinologger';
 
 import type { Session } from '../auth';
 
 import { auth } from '../auth';
+import prisma from '../prisma';
 
 export abstract class AuthenticationService {
   /**
@@ -17,30 +21,6 @@ export abstract class AuthenticationService {
   static async getSession(headers: Headers): Promise<Session | null> {
     const session = await auth.api.getSession({ headers });
     return session;
-
-    // // mock Authentication
-    // return {
-    //   user: {
-    //     id: '1',
-    //     email: '1',
-    //     name: '1',
-    //     role: Role.JUNIOR,
-    //     createdAt: new Date(),
-    //     updatedAt: new Date(),
-    //     emailVerified: true,
-    //   },
-    //   session: {
-    //     id: '1',
-    //     expiresAt: new Date(),
-    //     userId: '1',
-    //     createdAt: new Date(),
-    //     updatedAt: new Date(),
-    //     token: 'adwald',
-    //     ipAddress: '127.0.0.1',
-    //     userAgent:
-    //       'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/38.0.101.76 Safari/537.36',
-    //   },
-    // };
   }
 
   /**
@@ -48,9 +28,24 @@ export abstract class AuthenticationService {
    * @param headers - Request headers
    * @returns Promise resolving to boolean indicating token validity
    */
-  private static async validateJwtToken(headers: Headers): Promise<boolean> {
-    // TODO: Implement JWT token validation
-    return false;
+  private static async validateAPIKey(headers: Headers): Promise<User | null> {
+    const apiKey = headers.get('Authorization');
+
+    const bearerToken = apiKey?.split(' ')[1];
+
+    if (!bearerToken) {
+      return null;
+    }
+
+    const user = await prisma.user.findFirst({
+      where: {
+        apiKey: {
+          apiKey: bearerToken,
+        },
+      },
+    });
+
+    return user;
   }
 
   /**
@@ -60,7 +55,7 @@ export abstract class AuthenticationService {
    */
   static async authenticateRequest(
     request: NextRequest,
-  ): Promise<Session | { message: string }> {
+  ): Promise<PrismaUser | BetterAuthUser | { message: string }> {
     try {
       // Get current request headers
       const requestHeaders = await headers();
@@ -68,14 +63,17 @@ export abstract class AuthenticationService {
       // Attempt to get session
       const session = await this.getSession(requestHeaders);
 
-      // If no session, attempt JWT authentication
+      // If no session, attempt API key authentication
       if (!session) {
-        const isValidToken = await this.validateJwtToken(requestHeaders);
+        const user = await this.validateAPIKey(requestHeaders);
 
-        if (!isValidToken) {
+        if (!user) {
           return {
             message: 'Unauthorized',
           };
+        }
+        else {
+          return user;
         }
       }
 
@@ -85,7 +83,7 @@ export abstract class AuthenticationService {
           message: 'Unauthorized',
         };
       }
-      return result;
+      return result.user;
     }
     catch (error) {
       // Log debug information

@@ -6,7 +6,7 @@ import { StatusCodes } from 'http-status-codes';
 
 import type { HttpMethod } from '@/app/api/v1/[route]/route';
 
-import type { Session } from '../auth';
+import type { User } from '../auth';
 import type { RouteConfig } from './route-manager';
 
 import { logger } from '../pinologger';
@@ -24,7 +24,7 @@ interface PaginationParams {
 interface ValidationResult {
   error?: Response;
   routeConfig?: RouteConfig;
-  auth?: Session;
+  auth?: User;
   modelKey?: string;
 }
 
@@ -96,7 +96,7 @@ export class ApiRouteHandler {
 
     const hasPermission = this.routeController.checkRoutePermission(
       modelKey as keyof typeof routeConfigurations,
-      auth.user.role as Role,
+      auth.role as Role,
       this.method,
     );
 
