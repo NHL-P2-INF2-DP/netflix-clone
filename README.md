@@ -96,7 +96,6 @@ The project includes an automatic backup system for the PostgreSQL database.
 - Backups are created automatically every 4 hours
 - The system keeps the last 5 backups plus a `latest.sql` file
 - Backups are stored in the `./backups` directory
-- On startup, the system attempts to restore from the latest backup if one exists
 
 ### Manual Operations
 You can manually trigger backup and restore operations:
@@ -109,6 +108,7 @@ docker-compose exec -T backup-service ./backup-service.sh create_backup
 docker-compose exec -T backup-service ./backup-service.sh restore_from_backup
 ```
 
+
 The `-T` flag makes the command run non-interactively (returns to prompt after completion).
 
 ### Backup Files
@@ -120,6 +120,7 @@ The `-T` flag makes the command run non-interactively (returns to prompt after c
 - Manual operations don't interrupt the automatic backup schedule
 - Restoring will completely replace the current database with the backup
 - Make sure to backup before any major changes
+- Database restoration only occurs when manually triggered with the restore command
 
 ## Default Login Credentials
 

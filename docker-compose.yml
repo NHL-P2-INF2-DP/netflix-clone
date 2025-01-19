@@ -12,7 +12,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      backup-service:
+      seeding:
         condition: service_completed_successfully
     healthcheck:
       test: [CMD-SHELL, 'curl -f http://localhost:3000/api/health || exit 1']
@@ -63,8 +63,8 @@ services:
       - POSTGRES_DB=${POSTGRES_DB}
       - BACKUP_INTERVAL=14400
     depends_on:
-      postgres:
-        condition: service_healthy
+      seeding:
+        condition: service_completed_successfully
 
 volumes:
   postgres-data:

@@ -1,10 +1,14 @@
 FROM alpine:latest
 
-RUN apk add --no-cache postgresql-client bash
+# Install required packages including dos2unix
+RUN apk add --no-cache postgresql-client bash dos2unix
 
 WORKDIR /app
 
-COPY scripts/backup-service.sh .
-RUN chmod +x backup-service.sh
+# Copy the backup script and ensure it has Unix line endings
+COPY scripts/backup-service.sh ./backup-service.sh
+RUN dos2unix ./backup-service.sh && \
+    chmod +x ./backup-service.sh
 
-CMD ["./backup-service.sh"] 
+# Use bash explicitly to run the script
+CMD ["/bin/bash", "./backup-service.sh"] 
