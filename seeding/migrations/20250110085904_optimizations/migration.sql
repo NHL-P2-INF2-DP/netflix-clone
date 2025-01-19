@@ -222,7 +222,7 @@ CREATE TABLE "verification" (
 );
 
 -- CreateTable
-CREATE TABLE "apiKey" (
+CREATE TABLE "ApiKey" (
     "id" TEXT NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,

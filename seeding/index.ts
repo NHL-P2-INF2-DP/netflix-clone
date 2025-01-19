@@ -220,7 +220,7 @@ async function main() {
     `, avatars);
 
     await client.query(`
-        INSERT INTO "apiKey" (
+        INSERT INTO "ApiKey" (
     id,
     created_at,
     updated_at,
