@@ -2,28 +2,52 @@
 
 ## 🚧 Getting Started
 
-First, run the development server:
+To deploy this project using Docker Compose, follow these steps:
+
+1. Clone the repository:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/NHL-P2-INF2-DP/netflix-clone.git
+cd netflix-clone
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Copy the .env.example file to .env and update the environment variables as needed:
+
+```bash
+cp .env.example .env
+```
+
+3. Start the Docker containers:
+
+```bash
+docker-compose up --build
+```
+
+The application and the PostgreSQL database will now be running. The application will be accessible at [http://localhost:3000](http://localhost:3000).
 
 Open [http://localhost:3000/api/v1/documentation](http://localhost:3000/api/v1/documentation) with your browser to see the full documentation for all the routes. (build on top of the OpenAPI specification)
 
-## 🤔 Learn More
+## Default Login Credentials
 
-To learn more about Next.js, take a look at the following resources:
+You will be able to login with the following credentials:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Email: `junior@demo.com`
+- Password: `password123`
+- Role: `Junior`
+
+---
+
+- Email: `medior@demo.com`
+- Password: `password123`
+- Role: `Medior`
+
+---
+
+- Email: `senior@demo.com`
+- Password: `password123`
+- Role: `Senior`
+
+---
 
 ## 🚀 Extra Libraries used
 
@@ -63,30 +87,7 @@ The ERD for this project can be found in the [documentation/erd.md](https://gith
 
 The routes for this project can be found in the [documentation/routes.md](https://github.com/NHL-P2-INF2-DP/netflix-clone/tree/main/documentation/routes.md) file.
 
-## Deployment
-
-To deploy this project using Docker Compose, follow these steps:
-
-1. Clone the repository:
-
-```bash
-git clone https://github.com/NHL-P2-INF2-DP/netflix-clone.git
-cd netflix-clone
-```
-
-2. Copy the .env.example file to .env and update the environment variables as needed:
-
-```bash
-cp .env.example .env
-```
-
-3. Start the Docker containers:
-
-```bash
-docker-compose up --build
-```
-
-The application and the PostgreSQL database will now be running. The application will be accessible at [http://localhost:3000](http://localhost:3000).
+The class-diagram for this project can be found in the [documentation/class-diagram.md](https://github.com/NHL-P2-INF2-DP/netflix-clone/tree/main/documentation/class-diagram.md) file.
 
 ## 🔄 Database Backup System
 
@@ -121,19 +122,3 @@ The `-T` flag makes the command run non-interactively (returns to prompt after c
 - Restoring will completely replace the current database with the backup
 - Make sure to backup before any major changes
 - Database restoration only occurs when manually triggered with the restore command
-
-## Default Login Credentials
-
-You will be able to login with the following credentials:
-
-- Email: `junior@demo.com`
-- Password: `password123`
-- Role: `Junior`
-
-- Email: `medior@demo.com`
-- Password: `password123`
-- Role: `Medior`
-
-- Email: `senior@demo.com`
-- Password: `password123`
-- Role: `Senior`
