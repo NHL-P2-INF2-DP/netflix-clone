@@ -1,5 +1,11 @@
 🚀 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## 👥 Project Members
+- Bram Suurd #5371333
+- Jesse van der Voet #5405416
+- Elmedin Arifi #5429897
+- Bryan Potze #5378265
+
 ## 🚧 Getting Started
 
 To deploy this project using Docker Compose, follow these steps:
